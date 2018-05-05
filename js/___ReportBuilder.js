@@ -35,7 +35,7 @@ $(function () {
 
         $('#reportTable').empty();
 
-        RBjsondata();
+        RBloadtable(loadReport);
     });
 
     function loadReport(jsonData) {
