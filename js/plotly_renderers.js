@@ -93,7 +93,8 @@
           }
         };
         result = $("<div>").appendTo($("body"));
-        Plotly.newPlot(result[0], data, $.extend(layout, layoutOptions, opts.plotly));
+        override = {modeBarButtonsToRemove:['toImage','sendDataToCloud'],displaylogo:false};
+        Plotly.newPlot(result[0], data, $.extend(layout, layoutOptions, opts.plotly),override);
         return result.detach();
       };
     };
