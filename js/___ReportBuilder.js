@@ -50,6 +50,18 @@ $(function () {
         $('#reportTable').empty();
         report.Render($('#reportTable'),reRender);
         setHeaders();
+        var cols = '';
+        for(var i; i<report.ReportCols.length; i++){
+            cols += '<option value="' + report.ReportCols[i].DataField + '">' + report.ReportCols[i].Header + '</option>';
+        }
+        $('#pivotcols').html(cols);
+        $('#pivotrows').html(cols);
+        $('#pivotvals').html(cols);        
+        $('.custom-select').multiselect({
+            templates: {
+                li: '<li><a href="javascript:void(0);"><label class="pl-2"></label></a></li>'
+            }
+        });
         $("#pivotjs").pivotUI(report.ReportRows,{
             rows: [report.ReportCols[1].DataField],
             cols: [report.ReportCols[0].DataField],
