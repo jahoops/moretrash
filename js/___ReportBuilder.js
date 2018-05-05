@@ -50,34 +50,69 @@ $(function () {
         $('#reportTable').empty();
         report.Render($('#reportTable'),reRender);
         setHeaders();
+        function createPivot() {
+            var cols =  $('#pivotcols option:selected').map(function(){
+                return $(this).val();
+            }).get();
+            var rows =  $('#pivotrows option:selected').map(function(){
+                return $(this).val();
+            }).get();
+            var vals =  $('#pivotvals option:selected').map(function(){
+                return $(this).val();
+            }).get();
+            console.log($.pivotUI)
+            $("#pivotjs").pivotUI(report.ReportRows,{
+                rows: rows,
+                cols: cols,
+                vals: vals,
+                aggregatorName: "Sum",
+                renderers: $.extend(
+                        $.pivotUtilities.renderers,
+                        $.pivotUtilities.c3_renderers,
+                        $.pivotUtilities.d3_renderers,
+                        $.pivotUtilities.plotly_renderers,
+                        $.pivotUtilities.export_renderers
+                )
+            });
+        }
         var cols = '';
-        for(var i; i<report.ReportCols.length; i++){
+        for(var i=0; i<report.ReportCols.length; i++){
             cols += '<option value="' + report.ReportCols[i].DataField + '">' + report.ReportCols[i].Header + '</option>';
         }
         $('#pivotcols').html(cols);
         $('#pivotrows').html(cols);
         $('#pivotvals').html(cols);        
-        $('.custom-select').multiselect({
+        $('#pivotcols').multiselect({
             templates: {
                 li: '<li><a href="javascript:void(0);"><label class="pl-2"></label></a></li>'
+            },
+            onChange: function(option, checked, select) {
+                if(!$('#pivotheader').hasClass('d-none')) createPivot();
             }
         });
-        $("#pivotjs").pivotUI(report.ReportRows,{
-            rows: [report.ReportCols[1].DataField],
-            cols: [report.ReportCols[0].DataField],
-            vals: [report.ReportCols[report.ReportCols.length-1].DataField],
-            // vals: [report.ReportCols[2].DataField, report.ReportCols[3].DataField,report.ReportCols[4].DataField],
-            aggregatorName: "Sum",
-            renderers: $.extend(
-                    $.pivotUtilities.renderers,
-                    $.pivotUtilities.c3_renderers,
-                    $.pivotUtilities.d3_renderers,
-                    $.pivotUtilities.plotly_renderers,
-                    $.pivotUtilities.export_renderers
-            ),
-            //rendererName: "Horizontal Stacked Bar Chart",
-            //rowOrder: "value_a_to_z", colOrder: "value_z_to_a",
+        $('#pivotrows').multiselect({
+            templates: {
+                li: '<li><a href="javascript:void(0);"><label class="pl-2"></label></a></li>'
+            },
+            onChange: function(option, checked, select) {
+                if(!$('#pivotheader').hasClass('d-none')) createPivot();
+            }
         });
+        $('#pivotvals').multiselect({
+            templates: {
+                li: '<li><a href="javascript:void(0);"><label class="pl-2"></label></a></li>'
+            },
+            onChange: function(option, checked, select) {
+                if(!$('#pivotheader').hasClass('d-none')) createPivot();
+            }
+        });
+        
+        $('#pivotcols').multiselect('select', report.ReportCols[0].DataField);
+        $('#pivotrows').multiselect('select', report.ReportCols[1].DataField);
+        $('#pivotvals').multiselect('select', report.ReportCols[report.ReportCols.length-1].DataField);
+
+        $('#pivotheader').removeClass('d-none');
+        createPivot();
     }
 
     function setHeaders() {
