@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fork-awesome/1.0.11/css/fork-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/c3.css">
+    <link rel="stylesheet" type="text/css" href="css/pivot.css">
+    <style>
+        body {font-family: Verdana;}
+        .node {
+          border: solid 1px white;
+          font: 10px sans-serif;
+          line-height: 12px;
+          overflow: hidden;
+          position: absolute;
+          text-indent: 2px;
+        }
+    </style>
+    <title>Report</title>
+</head>
+<body>
+<div id="reportBuilder" class="container-fluid" style="background-color:whitesmoke;">
+    <form class="needs-validation" onsubmit="saveReport()">
+        <div class="form-row">
+            <div class="col text-right align-self-end">
+                <label for="dataSource">Data Source:</label>
+            </div>
+            <div class="col input-group">
+                <select class="form-control" id="dataSource" required>
+                </select>
+            </div>
+            <div class="col text-right align-self-end">
+                <label for="reportName">Report Name:</label>
+            </div>
+            <div class="col input-group">
+                <input type="text" class="form-control" id="reportName" placeholder="~ Enter new report name ~" required>
+            </div>
+            <div class="col">
+                <button id="saveReportButton" type="submit" class="btn btn-primary">Save Report</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col m-3">
+            <a class="float-right" id="addrowtotal" href="#">add row total column</a>
+            <table class="m-auto table table-striped table-bordered table-responsive" id="reportTable"></table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col m-3">
+            <div id="pivotjs"></div>
+        </div>
+    </div>
+</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+    <script src="js/d3-3.5.6.min.js"></script>
+    <script src="js/c3.min.js"></script>
+    <script src="js/pivot.js"></script>
+    <script src="js/report.js"></script>
+    <script src="index.js"></script>
+    <script src="js/plotly.min.js"></script>
+    <script src="js/export_renderers.min.js"></script>
+    <script src="js/d3_renderers.min.js"></script>
+    <script src="js/c3_renderers.min.js"></script>
+    <script src="js/plotly_renderers.min.js"></script>
+    <script>
+        var rowJSON = [
+            {
+                "TechName": "Bob",
+                "ProbClassName": "New Feature",
+                "Closed_Tickets": 14,
+                "TicketsTimeOnTask": 103,
+                "Past_Due": 1
+            },
+            {
+                "TechName": "Bob",
+                "ProbClassName": "Bug",
+                "Closed_Tickets": 21,
+                "TicketsTimeOnTask": 421,
+                "Past_Due": 0
+            },
+            {
+                "TechName": "Bob",
+                "ProbClassName": "Bug",
+                "Closed_Tickets": 5,
+                "TicketsTimeOnTask": 81,
+                "Past_Due": 0
+            },
+            {
+                "TechName": "Bob",
+                "ProbClassName": "Meeting",
+                "Closed_Tickets": 2,
+                "TicketsTimeOnTask": 60,
+                "Past_Due": 0
+            },
+            {
+                "TechName": "Sue",
+                "ProbClassName": "New Feature",
+                "Closed_Tickets": 22,
+                "TicketsTimeOnTask": 371,
+                "Past_Due": 3
+            },
+            {
+                "TechName": "Sue",
+                "ProbClassName": "Bug",
+                "Closed_Tickets": 10,
+                "TicketsTimeOnTask": 82,
+                "Past_Due": 1
+            },
+            {
+                "TechName": "Sue",
+                "ProbClassName": "Meeting",
+                "Closed_Tickets": 4,
+                "TicketsTimeOnTask": 180,
+                "Past_Due": 0
+            },
+            {
+                "TechName": "Sue",
+                "ProbClassName": "Documentation",
+                "Closed_Tickets": 1,
+                "TicketsTimeOnTask": 60,
+                "Past_Due": 0
+            },
+            {
+                "TechName": "Zack",
+                "ProbClassName": "Documentation",
+                "Closed_Tickets": 8,
+                "TicketsTimeOnTask": 320,
+                "Past_Due": 2
+            },
+            {
+                "TechName": "Zack",
+                "ProbClassName": "Documentation",
+                "Closed_Tickets": 4,
+                "TicketsTimeOnTask": 120,
+                "Past_Due": 0
+            }         
+        ];
+        var rowJSON2 = [
+            {
+                "CustomerName": "Tristan",
+                "ProbClassName": "New Feature",
+                "TicketsTimeOnTask": 103,
+                "Past_Due": 1
+            },
+            {
+                "CustomerName": "Tristan",
+                "ProbClassName": "Bug",
+                "TicketsTimeOnTask": 421,
+                "Past_Due": 0
+            },
+            {
+                "CustomerName": "Tristan",
+                "ProbClassName": "Meeting",
+                "TicketsTimeOnTask": 60,
+                "Past_Due": 0
+            },
+            {
+                "CustomerName": "Crystal",
+                "ProbClassName": "New Feature",
+                "TicketsTimeOnTask": 371,
+                "Past_Due": 3
+            },
+            {
+                "CustomerName": "Crystal",
+                "ProbClassName": "Bug",
+                "TicketsTimeOnTask": 82,
+                "Past_Due": 1
+            },
+            {
+                "CustomerName": "Crystal",
+                "ProbClassName": "Meeting",
+                "TicketsTimeOnTask": 180,
+                "Past_Due": 0
+            },
+            {
+                "CustomerName": "Crystal",
+                "ProbClassName": "Documentation",
+                "TicketsTimeOnTask": 60,
+                "Past_Due": 0
+            },
+            {
+                "CustomerName": "Kirby",
+                "ProbClassName": "Documentation",
+                "TicketsTimeOnTask": 320,
+                "Past_Due": 2
+            }
+        ];
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+.dt-hilite {
+    background-color: #FFFFDD !important;
+}
+.dt-right {
+    text-align: right !important;
+}
+.dt-subtotal {
+    text-align: right !important;
+    font-weight: bold;
+    background-color: #FFFFDD !important;
+}
+.dt-finaltotal {
+    text-align: right !important;
+    font-weight: bold;
+    background-color: #EEEECC !important;
+}
+.dt-groupheader {
+    font-weight: bold;
+    background-color: #FFFFDD !important;  
+}
+.hilite {
+    background-color: #FFFFDD !important;
+}
+.subtotalrow {
+    font-weight: bold;
+    background-color: #FFFFDD !important;
+}
+.finaltotalrow {
+    font-weight: bold;
+    background-color: #EEEECC !important;
+}
+.groupheadrow {
+    font-weight: bold;
+    background-color: #FFFFDD !important;
+}
+#contentleft {
+    max-width: 20%;
+}
