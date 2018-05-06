@@ -54,6 +54,7 @@ $(function () {
     }
 
     function renderPivot(){
+        console.log(report.ReportRows);
         $("#pivotjs").pivotUI(report.ReportRows,{
             aggregatorName: "Sum",
             renderers: $.extend(
@@ -98,6 +99,7 @@ $(function () {
             report.ReportCols[colindex][section] = true;
             renderReport(true);
         });
+        var timeout;
         $("th .rg-watch").on('input click', function () {
             var colindex = $(this).closest('ul').attr('colindex');
             var section = $(this).attr('section');

@@ -108,7 +108,7 @@ class Report {
                 if (this.ReportCols[i].Exclude) continue;
                 const c : Report.Col = this.ReportCols[i];
                 // calculated field check 
-                const thisVal = Report.returnFieldValue(r,c);
+                const thisVal = r[c.Index];
                 if (c.SubTotal.show) {
                     for(let gg=0;gg<subTotals.length;gg++){
                         subTotals[gg][subtot] += Number(thisVal);
@@ -149,7 +149,7 @@ class Report {
                 }
                 // keep building detailrow
                 if (c.Detail.show) {
-                    let format: Report.IFormatReturn = Report.applyFormat(c.Detail, Report.returnFieldValue(r,c));
+                    let format: Report.IFormatReturn = Report.applyFormat(c.Detail, r[c.Index]);
                     detailrow += `<td${format.classes}>${format.formatted}</td>`;
                 } else {
                     detailrow += `<td></td>`;
@@ -270,26 +270,24 @@ class Report {
         }
     }
     SortAll(){
+        const saveheaders = this.ReportRows.shift();
         for(let i=this.ReportCols.length-1;i>-1;i--){
             let c: Report.Col = this.ReportCols[i];
             if(!c.Exclude) {
-                if(!c.Group.show) {
-                    if(c.Sort) this.SortData(c.Sort,c);
-                } else {
-                    if(!c.Sort){
-                        c.Sort = 1;
-                    } 
-                    this.SortData(c.Sort,c);
+                if(c.Group.show && !c.Sort) {
+                    c.Sort = 1;
                 } 
+                if(c.Sort) this.SortData(c.Sort,c);
             }
 
         }
+        this.ReportRows.unshift(saveheaders);
     }
     SortData(direction,col:Report.Col) {
         function asc(a, b) {
-            let colA = Report.returnFieldValue(a,col);
+            let colA = a[col.Index];
             colA = $.isNumeric(colA) ? colA : colA.toUpperCase();
-            let colB = Report.returnFieldValue(b,col);
+            let colB = b[col.Index];
             colB = $.isNumeric(colB) ? colB : colB.toUpperCase();
             let comparison = 0;
             if (colA > colB) {
@@ -300,9 +298,9 @@ class Report {
             return comparison;
         }
         function desc(a, b) {
-            let colA = Report.returnFieldValue(a,col);
+            let colA = a[col.Index];
             colA = $.isNumeric(colA) ? colA : colA.toUpperCase();
-            let colB = Report.returnFieldValue(b,col);
+            let colB = b[col.Index];
             colB = $.isNumeric(colB) ? colB : colB.toUpperCase();
             let comparison = 0;
             if (colA < colB) {
@@ -312,24 +310,12 @@ class Report {
             }
             return comparison;
         }
-        const saveheaders = this.ReportRows[0];
-        this.ReportRows[0].splice(0,1);
         this.ReportRows = direction=='ascending' || direction==1 ? this.ReportRows.sort(asc) : this.ReportRows.sort(desc);
-        this.ReportRows.unshift(saveheaders);
     }
     AddRowCol() {   
-        var datafieldarray = [];     
-        for (const c of this.ReportCols) {
-            for(const f of c.Detail.formats) {
-                if (f==='number') {
-                    datafieldarray.push(c.Index);
-                    break;
-                }
-            }
-        }
         let c = {
             Header: 'Total',
-            DataField: datafieldarray.join(','),
+            Index: this.ReportCols.length,
             ShowSettingsIcon: true
         }
         const newCol = new Report.Col(c);
@@ -339,7 +325,15 @@ class Report {
         newCol.Detail.formats.push('number');
         newCol.SubTotal.formats.push('number');
         newCol.FinalTotal.formats.push('number');
-        this.ReportCols.push(newCol);  
+        this.ReportCols.push(newCol); 
+        this.ReportRows[0].push('Total')
+        for (let r = 1; r<this.ReportRows.length; r++) {
+            let calcval = 0;
+            for(const ci in this.ReportRows[r]) {
+                if($.isNumeric(this.ReportRows[r][ci])) calcval += Number(this.ReportRows[r][ci]);
+            }
+            this.ReportRows[r].push(calcval);
+        }
     }
 }
 
@@ -364,7 +358,6 @@ namespace Report {
     export class Col {
         Header ? : string;
         Index: number;
-        FromIndexes ? : number[];
         Sort ? : Sort;
         Group ? : ColumnInfo = {
             show: false,
@@ -488,18 +481,5 @@ namespace Report {
         }
         finaltotalrow += `</tr>`
         return finaltotalrow;
-    }
-    export function returnFieldValue(row: any[], col: Col): any {
-        // for calculated columns, a column might be a calculation on more than one index
-        let calcvalue = 0;
-        if(col.FromIndexes) {
-            // for now only sum field values
-            for(const f of col.FromIndexes) {
-                calcvalue += row[f];
-            }
-        } else {
-            calcvalue = row[col.Index];
-        }
-        return calcvalue;
     }
 }
