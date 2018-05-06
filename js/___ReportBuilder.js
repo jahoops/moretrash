@@ -50,6 +50,10 @@ $(function () {
         $('#reportTable').empty();
         report.Render($('#reportTable'),reRender);
         setHeaders();
+        renderPivot();
+    }
+
+    function renderPivot(){
         $("#pivotjs").pivotUI(report.ReportRows,{
             aggregatorName: "Sum",
             renderers: $.extend(
@@ -100,7 +104,12 @@ $(function () {
             switch ($(this).attr('type')) {
                 case 'text':
                     report.ReportCols[colindex][section] = $(this).val();
+                    report.ReportRows[0][colindex] = $(this).val();
                     $(this).closest('th').find('span').text(report.ReportCols[colindex][section]);
+                    clearTimeout(timeout); // wait for more input
+                    timeout = setTimeout(function () {
+                        renderPivot();
+                    }, 1000);
                     break;
                 case 'checkbox':
                     report.ReportCols[colindex][section].show = $(this).is(':checked');

@@ -2,13 +2,12 @@ var Report = /** @class */ (function () {
     function Report(rowData, columnInfo, name, version) {
         this.ReportCols = [];
         this.ReportRows = [];
-        for (var _i = 0, rowData_1 = rowData; _i < rowData_1.length; _i++) {
-            var r = rowData_1[_i];
-            this.ReportRows.push(new Report.Row(r));
+        for (var r = 0; r < rowData.length; r++) {
+            this.ReportRows.push(rowData[r]);
         }
         if (columnInfo) {
-            for (var _a = 0, columnInfo_1 = columnInfo; _a < columnInfo_1.length; _a++) {
-                var c = columnInfo_1[_a];
+            for (var _i = 0, columnInfo_1 = columnInfo; _i < columnInfo_1.length; _i++) {
+                var c = columnInfo_1[_i];
                 this.ReportCols.push(new Report.Col(c));
             }
             this.ReportName = name ? name : 'Report Builder';
@@ -16,25 +15,26 @@ var Report = /** @class */ (function () {
         }
         else {
             var colInspect = [];
-            for (var firstrowfieldname in this.ReportRows[0]) {
-                var val = this.ReportRows[0][firstrowfieldname];
+            for (var c = 0; c < this.ReportRows[1].length; c++) {
+                var val = this.ReportRows[1][c];
                 if ($.isNumeric(val)) {
                     colInspect.push({
-                        DataField: firstrowfieldname,
+                        Index: c,
                         IsNumber: true
                     });
                 }
                 else {
                     colInspect.push({
-                        DataField: firstrowfieldname,
+                        Index: c,
                         IsNumber: false
                     });
                 }
             }
-            for (var _b = 0, colInspect_1 = colInspect; _b < colInspect_1.length; _b++) {
-                var ci = colInspect_1[_b];
+            for (var _a = 0, colInspect_1 = colInspect; _a < colInspect_1.length; _a++) {
+                var ci = colInspect_1[_a];
                 var c = {
-                    DataField: ci.DataField,
+                    Header: this.ReportRows[0][ci.Index],
+                    Index: ci.Index,
                     ShowSettingsIcon: true
                 };
                 var newCol = new Report.Col(c);
@@ -95,12 +95,12 @@ var Report = /** @class */ (function () {
             if (this.ReportCols[i].Exclude)
                 continue;
             var c = this.ReportCols[i];
-            thead += c.ShowSettingsIcon ? "<th key=\"" + c.DataField + "\" colindex=\"" + i + "\"><span>" + c.Header + "</span></th>" : "<th>" + c.Header + "</th>";
+            thead += c.ShowSettingsIcon ? "<th colindex=\"" + c.Index + "\"><span>" + c.Header + "</span></th>" : "<th>" + c.Header + "</th>";
         }
         thead += "</tr></thead>";
         var tbody = reRender == 'body' ? "" : "<tbody>";
-        for (var _i = 0, _a = this.ReportRows; _i < _a.length; _i++) {
-            var r = _a[_i];
+        for (var ir = 1; ir < this.ReportRows.length; ir++) {
+            var r = this.ReportRows[ir];
             var group = 0;
             var subtot = 0;
             var fintot = 0;
@@ -111,7 +111,7 @@ var Report = /** @class */ (function () {
                     continue;
                 var c = this.ReportCols[i];
                 // calculated field check 
-                var thisVal = Report.returnFieldValue(r, c.DataField);
+                var thisVal = Report.returnFieldValue(r, c);
                 if (c.SubTotal.show) {
                     for (var gg = 0; gg < subTotals.length; gg++) {
                         subTotals[gg][subtot] += Number(thisVal);
@@ -124,7 +124,7 @@ var Report = /** @class */ (function () {
                 }
                 // insert group header/subtotals to tbody before detailrow 
                 if (c.Group.show) {
-                    var thisCol = c.DataField;
+                    var thisCol = c.Index;
                     // on group break
                     if (groupValues[group] !== thisVal) {
                         // if it is NOT the first record, and any column shows subtotals, insert subtotal to tbody now
@@ -135,12 +135,12 @@ var Report = /** @class */ (function () {
                         }
                         // insert group header row to tbody now
                         var grouprow = "<tr>";
-                        for (var _b = 0, _c = this.ReportCols; _b < _c.length; _b++) {
-                            var group_c = _c[_b];
+                        for (var _i = 0, _a = this.ReportCols; _i < _a.length; _i++) {
+                            var group_c = _a[_i];
                             if (group_c.Exclude)
                                 continue;
                             var format = Report.applyFormat(c.Group);
-                            grouprow += thisCol === group_c.DataField ? "<td" + format.classes + ">" + thisVal + "</td>" : "<td></td>";
+                            grouprow += thisCol === group_c.Index ? "<td" + format.classes + ">" + thisVal + "</td>" : "<td></td>";
                         }
                         grouprow += "</tr>";
                         tbody += grouprow;
@@ -153,7 +153,7 @@ var Report = /** @class */ (function () {
                 }
                 // keep building detailrow
                 if (c.Detail.show) {
-                    var format = Report.applyFormat(c.Detail, Report.returnFieldValue(r, c.DataField));
+                    var format = Report.applyFormat(c.Detail, Report.returnFieldValue(r, c));
                     detailrow += "<td" + format.classes + ">" + format.formatted + "</td>";
                 }
                 else {
@@ -230,7 +230,7 @@ var Report = /** @class */ (function () {
     Report.prototype.SetGroupColumns = function () {
         var groups = this.ReportCols.filter(function (e) { return e.Group.show && !e.Exclude; });
         for (var i = 0; i < groups.length; i++) {
-            this.MoveKeyToPos(groups[i].DataField, i);
+            this.MoveColToPos(groups[i].Index, i);
         }
         this.SortAll();
     };
@@ -239,22 +239,22 @@ var Report = /** @class */ (function () {
         this.ReportCols[toindex] = this.ReportCols[fromindex];
         this.ReportCols[fromindex] = saveToCol;
     };
-    Report.prototype.MoveKeyToPos = function (key, toindex) {
+    Report.prototype.MoveColToPos = function (colindex, toposition) {
         var i;
         for (i = 0; i < this.ReportCols.length; i++) {
-            if (this.ReportCols[i].DataField == key) {
+            if (this.ReportCols[i].Index == colindex) {
                 break;
             }
         }
         var fromindex = i;
-        this.SwitchCols(fromindex, toindex);
-        while (toindex - 1 > fromindex) {
-            toindex--;
-            this.SwitchCols(fromindex, toindex);
+        this.SwitchCols(fromindex, toposition);
+        while (toposition - 1 > fromindex) {
+            toposition--;
+            this.SwitchCols(colindex, toposition);
         }
-        while (toindex + 1 < fromindex) {
-            toindex++;
-            this.SwitchCols(fromindex, toindex);
+        while (toposition + 1 < fromindex) {
+            toposition++;
+            this.SwitchCols(colindex, toposition);
         }
     };
     Report.prototype.SortAll = function () {
@@ -263,22 +263,22 @@ var Report = /** @class */ (function () {
             if (!c.Exclude) {
                 if (!c.Group.show) {
                     if (c.Sort)
-                        this.SortData(i, c.Sort);
+                        this.SortData(c.Sort, c);
                 }
                 else {
                     if (!c.Sort) {
                         c.Sort = 1;
                     }
-                    this.SortData(i, c.Sort);
+                    this.SortData(c.Sort, c);
                 }
             }
         }
     };
-    Report.prototype.SortData = function (colindex, direction) {
+    Report.prototype.SortData = function (direction, col) {
         function asc(a, b) {
-            var colA = Report.returnFieldValue(a, key);
+            var colA = Report.returnFieldValue(a, col);
             colA = $.isNumeric(colA) ? colA : colA.toUpperCase();
-            var colB = Report.returnFieldValue(b, key);
+            var colB = Report.returnFieldValue(b, col);
             colB = $.isNumeric(colB) ? colB : colB.toUpperCase();
             var comparison = 0;
             if (colA > colB) {
@@ -290,9 +290,9 @@ var Report = /** @class */ (function () {
             return comparison;
         }
         function desc(a, b) {
-            var colA = Report.returnFieldValue(a, key);
+            var colA = Report.returnFieldValue(a, col);
             colA = $.isNumeric(colA) ? colA : colA.toUpperCase();
-            var colB = Report.returnFieldValue(b, key);
+            var colB = Report.returnFieldValue(b, col);
             colB = $.isNumeric(colB) ? colB : colB.toUpperCase();
             var comparison = 0;
             if (colA < colB) {
@@ -303,8 +303,10 @@ var Report = /** @class */ (function () {
             }
             return comparison;
         }
-        var key = this.ReportCols[colindex].DataField;
+        var saveheaders = this.ReportRows[0];
+        this.ReportRows[0].splice(0, 1);
         this.ReportRows = direction == 'ascending' || direction == 1 ? this.ReportRows.sort(asc) : this.ReportRows.sort(desc);
+        this.ReportRows.unshift(saveheaders);
     };
     Report.prototype.AddRowCol = function () {
         var datafieldarray = [];
@@ -313,7 +315,7 @@ var Report = /** @class */ (function () {
             for (var _b = 0, _c = c_1.Detail.formats; _b < _c.length; _b++) {
                 var f = _c[_b];
                 if (f === 'number') {
-                    datafieldarray.push(c_1.DataField);
+                    datafieldarray.push(c_1.Index);
                     break;
                 }
             }
@@ -369,23 +371,10 @@ var Report = /** @class */ (function () {
             this.ShowSettingsIcon = false;
             this.Exclude = false;
             $.extend(this, json_in);
-            if (!this.Header)
-                this.Header = this.DataField;
         }
         return Col;
     }());
     Report.Col = Col;
-    var Row = /** @class */ (function () {
-        function Row(json_in) {
-            $.extend(this, json_in);
-        }
-        return Row;
-    }());
-    Report.Row = Row;
-    function getColumnInfoByKey(key) {
-        JSON.stringify(this.ReportCols[key]);
-    }
-    Report.getColumnInfoByKey = getColumnInfoByKey;
     function getFormat(formatname) {
         switch (formatname) {
             case 'align right':
@@ -495,18 +484,18 @@ var Report = /** @class */ (function () {
         return finaltotalrow;
     }
     Report.finalTotalRow = finalTotalRow;
-    function returnFieldValue(row, DataField) {
-        // for calculated columns, a column might be a comma delimited list of field names instead of a single field name
+    function returnFieldValue(row, col) {
+        // for calculated columns, a column might be a calculation on more than one index
         var calcvalue = 0;
-        if (DataField.indexOf(',') > -1) {
+        if (col.FromIndexes) {
             // for now only sum field values
-            for (var _i = 0, _a = DataField.split(','); _i < _a.length; _i++) {
+            for (var _i = 0, _a = col.FromIndexes; _i < _a.length; _i++) {
                 var f = _a[_i];
                 calcvalue += row[f];
             }
         }
         else {
-            calcvalue = row[DataField];
+            calcvalue = row[col.Index];
         }
         return calcvalue;
     }

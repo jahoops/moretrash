@@ -1,12 +1,12 @@
 class Report {
     ReportName: string;
     ReportCols: Report.Col[] = [];
-    ReportRows: Report.Row[] = [];
+    ReportRows: any[][] = [];
     ReportVersion: string;
     ReportPivot?: object;
-    constructor(rowData: any, columnInfo ? : any, name ? : string, version ? : string) {
-        for (const r of rowData) {
-            this.ReportRows.push(new Report.Row(r));
+    constructor(rowData: any[][], columnInfo ? : any, name ? : string, version ? : string) {
+        for (let r = 0; r<rowData.length; r++) {
+            this.ReportRows.push(rowData[r]);
         }
         if (columnInfo) {
             for (const c of columnInfo) {
@@ -16,23 +16,24 @@ class Report {
             this.ReportVersion = version ? version : '1.0';
         } else {
             let colInspect = [];
-            for (const firstrowfieldname in this.ReportRows[0]) {
-                const val = this.ReportRows[0][firstrowfieldname];
+            for (let c=0; c<this.ReportRows[1].length; c++) {
+                const val = this.ReportRows[1][c];
                 if ($.isNumeric(val)) {
                     colInspect.push({
-                        DataField: firstrowfieldname,
+                        Index: c,
                         IsNumber: true
                     })
                 } else {
                     colInspect.push({
-                        DataField: firstrowfieldname,
+                        Index: c,
                         IsNumber: false
                     })
                 }
             }
             for (const ci of colInspect) {
                 let c = {
-                    DataField: ci.DataField,
+                    Header: this.ReportRows[0][ci.Index],
+                    Index: ci.Index,
                     ShowSettingsIcon: true
                 }
                 const newCol = new Report.Col(c);
@@ -91,12 +92,13 @@ class Report {
         for (let i = 0; i<this.ReportCols.length; i++) {
             if (this.ReportCols[i].Exclude) continue;
             const c : Report.Col = this.ReportCols[i];
-            thead += c.ShowSettingsIcon ? `<th key="${c.DataField}" colindex="${i}"><span>${c.Header}</span></th>` : `<th>${c.Header}</th>`;
+            thead += c.ShowSettingsIcon ? `<th colindex="${c.Index}"><span>${c.Header}</span></th>` : `<th>${c.Header}</th>`;
         }
         thead += `</tr></thead>`;
 
         let tbody = reRender=='body' ? `` : `<tbody>`;
-        for (const r of this.ReportRows) {
+        for (let ir=1; ir<this.ReportRows.length; ir++) {
+            let r = this.ReportRows[ir];
             let group = 0;
             let subtot = 0;
             let fintot = 0;
@@ -106,7 +108,7 @@ class Report {
                 if (this.ReportCols[i].Exclude) continue;
                 const c : Report.Col = this.ReportCols[i];
                 // calculated field check 
-                const thisVal = Report.returnFieldValue(r,c.DataField);
+                const thisVal = Report.returnFieldValue(r,c);
                 if (c.SubTotal.show) {
                     for(let gg=0;gg<subTotals.length;gg++){
                         subTotals[gg][subtot] += Number(thisVal);
@@ -119,7 +121,7 @@ class Report {
                 }
                 // insert group header/subtotals to tbody before detailrow 
                 if (c.Group.show) {
-                    const thisCol = c.DataField;
+                    const thisCol = c.Index;
                     
                     // on group break
                     if (groupValues[group] !== thisVal) { 
@@ -134,7 +136,7 @@ class Report {
                         for (const group_c of this.ReportCols) {
                             if (group_c.Exclude) continue;
                             let format: Report.IFormatReturn = Report.applyFormat(c.Group);
-                            grouprow += thisCol === group_c.DataField ? `<td${format.classes}>${thisVal}</td>` : `<td></td>`;
+                            grouprow += thisCol === group_c.Index ? `<td${format.classes}>${thisVal}</td>` : `<td></td>`;
                         }
                         grouprow += `</tr>`;
                         tbody += grouprow;
@@ -147,7 +149,7 @@ class Report {
                 }
                 // keep building detailrow
                 if (c.Detail.show) {
-                    let format: Report.IFormatReturn = Report.applyFormat(c.Detail, Report.returnFieldValue(r,c.DataField));
+                    let format: Report.IFormatReturn = Report.applyFormat(c.Detail, Report.returnFieldValue(r,c));
                     detailrow += `<td${format.classes}>${format.formatted}</td>`;
                 } else {
                     detailrow += `<td></td>`;
@@ -240,7 +242,7 @@ class Report {
     SetGroupColumns(){
         const groups = this.ReportCols.filter(function(e){ return e.Group.show && !e.Exclude; });
         for(let i=0;i<groups.length;i++){
-            this.MoveKeyToPos(groups[i].DataField, i);
+            this.MoveColToPos(groups[i].Index, i);
         }
         this.SortAll();
     }
@@ -249,22 +251,22 @@ class Report {
         this.ReportCols[toindex] = this.ReportCols[fromindex];
         this.ReportCols[fromindex] = saveToCol;
     }
-    MoveKeyToPos(key,toindex){
+    MoveColToPos(colindex:number,toposition){
         let i;
         for(i=0;i<this.ReportCols.length;i++){
-            if(this.ReportCols[i].DataField == key){
+            if(this.ReportCols[i].Index == colindex){
                 break;
             }
         }
         let fromindex = i;
-        this.SwitchCols(fromindex,toindex);
-        while(toindex-1>fromindex){
-            toindex--;
-            this.SwitchCols(fromindex,toindex);
+        this.SwitchCols(fromindex,toposition);
+        while(toposition-1>fromindex){
+            toposition--;
+            this.SwitchCols(colindex,toposition);
         }
-        while(toindex+1<fromindex){
-            toindex++;
-            this.SwitchCols(fromindex,toindex);
+        while(toposition+1<fromindex){
+            toposition++;
+            this.SwitchCols(colindex,toposition);
         }
     }
     SortAll(){
@@ -272,22 +274,22 @@ class Report {
             let c: Report.Col = this.ReportCols[i];
             if(!c.Exclude) {
                 if(!c.Group.show) {
-                    if(c.Sort) this.SortData(i,c.Sort);
+                    if(c.Sort) this.SortData(c.Sort,c);
                 } else {
                     if(!c.Sort){
                         c.Sort = 1;
                     } 
-                    this.SortData(i,c.Sort);
+                    this.SortData(c.Sort,c);
                 } 
             }
 
         }
     }
-    SortData(colindex, direction) {
+    SortData(direction,col:Report.Col) {
         function asc(a, b) {
-            let colA = Report.returnFieldValue(a,key);
+            let colA = Report.returnFieldValue(a,col);
             colA = $.isNumeric(colA) ? colA : colA.toUpperCase();
-            let colB = Report.returnFieldValue(b,key);
+            let colB = Report.returnFieldValue(b,col);
             colB = $.isNumeric(colB) ? colB : colB.toUpperCase();
             let comparison = 0;
             if (colA > colB) {
@@ -298,9 +300,9 @@ class Report {
             return comparison;
         }
         function desc(a, b) {
-            let colA = Report.returnFieldValue(a,key);
+            let colA = Report.returnFieldValue(a,col);
             colA = $.isNumeric(colA) ? colA : colA.toUpperCase();
-            let colB = Report.returnFieldValue(b,key);
+            let colB = Report.returnFieldValue(b,col);
             colB = $.isNumeric(colB) ? colB : colB.toUpperCase();
             let comparison = 0;
             if (colA < colB) {
@@ -310,15 +312,17 @@ class Report {
             }
             return comparison;
         }
-        const key = this.ReportCols[colindex].DataField;
+        const saveheaders = this.ReportRows[0];
+        this.ReportRows[0].splice(0,1);
         this.ReportRows = direction=='ascending' || direction==1 ? this.ReportRows.sort(asc) : this.ReportRows.sort(desc);
+        this.ReportRows.unshift(saveheaders);
     }
     AddRowCol() {   
         var datafieldarray = [];     
         for (const c of this.ReportCols) {
             for(const f of c.Detail.formats) {
                 if (f==='number') {
-                    datafieldarray.push(c.DataField);
+                    datafieldarray.push(c.Index);
                     break;
                 }
             }
@@ -359,7 +363,8 @@ namespace Report {
     }
     export class Col {
         Header ? : string;
-        DataField: string;
+        Index: number;
+        FromIndexes ? : number[];
         Sort ? : Sort;
         Group ? : ColumnInfo = {
             show: false,
@@ -381,16 +386,7 @@ namespace Report {
         Exclude ? : boolean = false;
         constructor(json_in: any) {
             $.extend(this, json_in);
-            if (!this.Header) this.Header = this.DataField;
         }
-    }
-    export class Row {
-        constructor(json_in: any) {
-            $.extend(this, json_in);
-        }
-    }
-    export function getColumnInfoByKey(key) {
-        JSON.stringify(this.ReportCols[key]);
     }
     function getFormat(formatname) {
        switch(formatname){
@@ -493,16 +489,16 @@ namespace Report {
         finaltotalrow += `</tr>`
         return finaltotalrow;
     }
-    export function returnFieldValue(row: Row, DataField: string): any {
-        // for calculated columns, a column might be a comma delimited list of field names instead of a single field name
+    export function returnFieldValue(row: any[], col: Col): any {
+        // for calculated columns, a column might be a calculation on more than one index
         let calcvalue = 0;
-        if(DataField.indexOf(',')>-1) {
+        if(col.FromIndexes) {
             // for now only sum field values
-            for(const f of DataField.split(',')) {
+            for(const f of col.FromIndexes) {
                 calcvalue += row[f];
             }
         } else {
-            calcvalue = row[DataField];
+            calcvalue = row[col.Index];
         }
         return calcvalue;
     }

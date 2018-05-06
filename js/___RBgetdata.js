@@ -1,7 +1,5 @@
-
-
 function RBloadtable(callback) {
-    callback(rowJSON);
+    callback(rowJSONarray);
 }
 function RBloadsaved() {
 }
@@ -95,3 +93,16 @@ var rowJSON = [
         "Past_Due": 0
     }         
 ];
+var rowJSONarray = [    ["TechName","ProbClassName","Closed_Tickets","TicketsTimeOnTask","Past_Due"],
+                        ["Bob","New Feature",14,103,1],
+                        ["Bob","Bug",21,421,0],
+                        ["Bob","Bug",5,81,0],
+                        ["Bob","Meeting",2,60,0],
+                        ["Sue","New Feature",22,371,3],
+                        ["Sue","Bug",10,82,1],
+                        ["Sue","Meeting",4,180,0],
+                        ["Sue","Documentation",1,60,0],
+                        ["Zack","Documentation",8,320,2],
+                        ["Zack","Documentation",4,120,0]
+                    ];
+
