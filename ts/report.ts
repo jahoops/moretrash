@@ -21,11 +21,13 @@ class Report {
                 if ($.isNumeric(val)) {
                     colInspect.push({
                         Index: c,
+                        Position: c,
                         IsNumber: true
                     })
                 } else {
                     colInspect.push({
                         Index: c,
+                        Position: c,
                         IsNumber: false
                     })
                 }
@@ -34,6 +36,7 @@ class Report {
                 let c = {
                     Header: this.ReportRows[0][ci.Index],
                     Index: ci.Index,
+                    Position: ci.Index,
                     ShowSettingsIcon: true
                 }
                 const newCol = new Report.Col(c);
@@ -58,19 +61,21 @@ class Report {
     }
     Render(el: string, reRender? : string) {
         const groupValues = [];
-        let hasGroups = false;
         let subTotals = [];
         let hasSubTotals = false;
         let hasSubTotalsByGroup = [];
         const finalTotals = [];
         let hasFinalTotals = false;
-        for (let i=0; i<this.ReportCols.length; i++) {
-            if (this.ReportCols[i].Exclude) continue;
-            if (this.ReportCols[i].Group.show) {
-                hasGroups = true;
+        const cols = this.ReportCols.filter(function(e){ return e.Position>-1; });
+        cols.sort(function(a,b){
+            return a.Position - b.Position;
+        })
+        for (let i=0; i<cols.length; i++) {
+            const c : Report.Col = cols[i];
+            if (c.Group.show) {
                 groupValues.push(undefined);
             }            
-            if (this.ReportCols[i].FinalTotal.show) {
+            if (c.FinalTotal.show) {
                 hasFinalTotals = true;
                 finalTotals.push(0);
             }
@@ -78,9 +83,9 @@ class Report {
         for (let g=0; g<groupValues.length; g++) {
             subTotals.push([]);
             hasSubTotalsByGroup[g] = false;
-            for (let i=0; i<this.ReportCols.length; i++) {
-                if (this.ReportCols[i].Exclude) continue;
-                if (this.ReportCols[i].SubTotal.show) {
+            for (let i=0; i<cols.length; i++) {
+                const c : Report.Col = cols[i];
+                if (c.SubTotal.show) {
                     hasSubTotals = true;
                     hasSubTotalsByGroup[g] = true;
                     subTotals[g].push(0);
@@ -89,10 +94,9 @@ class Report {
         }
 
         let thead = `<thead><tr>`;
-        for (let i = 0; i<this.ReportCols.length; i++) {
-            if (this.ReportCols[i].Exclude) continue;
-            const c : Report.Col = this.ReportCols[i];
-            thead += c.ShowSettingsIcon ? `<th colindex="${c.Index}"><span>${c.Header}</span></th>` : `<th>${c.Header}</th>`;
+        for (let i=0; i<cols.length; i++) {
+            const c : Report.Col = cols[i];
+            thead += c.ShowSettingsIcon ? `<th colposition="${c.Position}" colindex="${c.Index}"><span>${c.Header}</span></th>` : `<th>${c.Header}</th>`;
         }
         thead += `</tr></thead>`;
 
@@ -104,9 +108,8 @@ class Report {
             let fintot = 0;
             // save next row in detailrow
             let detailrow = `<tr>`;
-            for (let i = 0; i<this.ReportCols.length; i++) {
-                if (this.ReportCols[i].Exclude) continue;
-                const c : Report.Col = this.ReportCols[i];
+            for (let i=0; i<cols.length; i++) {
+                const c : Report.Col = cols[i];
                 // calculated field check 
                 const thisVal = r[c.Index];
                 if (c.SubTotal.show) {
@@ -133,8 +136,8 @@ class Report {
                         }
                         // insert group header row to tbody now
                         let grouprow = `<tr>`;
-                        for (const group_c of this.ReportCols) {
-                            if (group_c.Exclude) continue;
+                        for (let g=0; g<cols.length; g++) {
+                            const group_c : Report.Col = cols[g];
                             let format: Report.IFormatReturn = Report.applyFormat(c.Group);
                             grouprow += thisCol === group_c.Index ? `<td${format.classes}>${thisVal}</td>` : `<td></td>`;
                         }
@@ -185,40 +188,33 @@ class Report {
         formatdiv += `</div>`;
         return formatsonly ? formats : formatdiv;
     }
-    ColEditForm(colindex: number) {
-        const cols = this.ReportCols;
-        const col = cols[colindex];
-        const i = Number(colindex); 
-        const l = cols.length;
-        let j = i-1;
-        for(j; j>-1; j--) {
-            if(!cols[j].Exclude) break;
-        }
-        const prev_col = j==-1 ? false : cols[j];
-        j = i+1;
-        for(j; j<l; j++) {
-            if(!cols[j].Exclude) break;
-        }
-        const next_col = j==l ? false : cols[j];
+    ColEditForm(posindex: number) {
+        const cols = this.ReportCols.filter(function(e){ return e.Position>-1; });
+        cols.sort(function(a,b){
+            return a.Position - b.Position;
+        })
+        const col = cols.filter(function(e){ return e.Position==posindex; });
+        const prev_col = col[0].Position > 0 ? cols[col[0].Position-1] : false;
+        const next_col = col[0].Position < cols.length-1 ? cols[col[0].Position+1] : false;
         let form = `
             <div class="columneditform btn-group dropright btn-group-sm pl-2">
-                <a class="btn excludecheckbox" section="${'Exclude'}" colindex="${colindex}" href="#"><i class="fa fa-check-square-o"></a></i>
+                <a class="btn excludecheckbox" section="${'Exclude'}" colposition="${col[0].Position}" colindex="${col[0].Index}" href="#"><i class="fa fa-check-square-o"></a></i>
                 <a class="btn dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-gear"></i></a>
-                <ul class="dropdown-menu" colindex="${colindex}">`
+                <ul class="dropdown-menu" colposition="${col[0].Position}" colindex="${col[0].Index}">`
                 for (const section of ['Header']) {
                     form += `<div class='p-0 m-0 text-center'>`;
-                    form += i > 0 && !col.Group.show && (prev_col && !prev_col.Group.show) ? `<i class="moveleft clickable fa fa-arrow-left"></i>` : `<i class="moveleft gray fa fa-arrow-left"></i>`;
-                    form += col.Group.show ? ` grouped ` : ` move `; 
-                    form += colindex < l-1 && !col.Group.show && (next_col && !next_col.Group.show) ?  `<i class="moveright clickable fa fa-arrow-right"></i></div>` : `<i class="moveright gray fa fa-arrow-right"></i></div>`;
-                    form += `<li class="p-2">${section}:<input class="rg-watch" type="text" section="${section}" value="${col[section]}"></li>`;
+                    form += col[0].Position > 0 && !col[0].Group.show && (prev_col && !prev_col.Group.show) ? `<i class="moveleft clickable fa fa-arrow-left"></i>` : `<i class="moveleft gray fa fa-arrow-left"></i>`;
+                    form += col[0].Group.show ? ` grouped ` : ` move `; 
+                    form += col[0].Position < cols.length-1 && !col[0].Group.show && (next_col && !next_col.Group.show) ?  `<i class="moveright clickable fa fa-arrow-right"></i></div>` : `<i class="moveright gray fa fa-arrow-right"></i></div>`;
+                    form += `<li class="p-2">${section}:<input class="rg-watch" type="text" section="${section}" value="${col[0][section]}"></li>`;
                 }
                 for (const section of ['Detail', 'Group', 'SubTotal', 'FinalTotal']) {
-                    const colinfo: Report.ColumnInfo = col[section];
+                    const colinfo: Report.ColumnInfo = col[0][section];
                     var checked = colinfo.show ? ' checked=checked' : '';
                     form += `<li class="px-2">${section}:<div class="form-check form-check-inline">
                     <input class="form-check-input rg-watch ml-2" section="${section}" type="checkbox" ${checked}}">
                     <a href="#" class="addformatlink font-weight-light font-italic small ml-2" section="${section}">add format</a></li>`;
-                    form += this.ColEditFormats(colindex,section);
+                    form += this.ColEditFormats(col[0].Index,section);
                 }
                 form += `</ul>
             </div>`;
@@ -240,47 +236,45 @@ class Report {
         return form;
     }
     SetGroupColumns(){
-        const groups = this.ReportCols.filter(function(e){ return e.Group.show && !e.Exclude; });
+        const groups = this.ReportCols.filter(function(e){ return e.Group.show && e.Position>-1; });
+        groups.sort(function(a,b){
+            return a.Position - b.Position;
+        })
         for(let i=0;i<groups.length;i++){
-            this.MoveColToPos(groups[i].Index, i);
+            this.MoveToPosition(groups[i].Position, i);
         }
         this.SortAll();
     }
-    SwitchCols(fromindex,toindex){
-        var saveToCol = this.ReportCols[toindex];
-        this.ReportCols[toindex] = this.ReportCols[fromindex];
-        this.ReportCols[fromindex] = saveToCol;
+    SwitchPosition(fromposition,toposition){
+        const from = this.ReportCols.filter(function(e){ return e.Position==fromposition; });
+        const to = this.ReportCols.filter(function(e){ return e.Position==toposition; });
+        from[0].Position = toposition;
+        to[0].Position = fromposition;
     }
-    MoveColToPos(colindex:number,toposition){
-        let i;
-        for(i=0;i<this.ReportCols.length;i++){
-            if(this.ReportCols[i].Index == colindex){
-                break;
-            }
-        }
-        let fromindex = i;
-        this.SwitchCols(fromindex,toposition);
-        while(toposition-1>fromindex){
+    MoveToPosition(fromposition,toposition){
+        this.SwitchPosition(fromposition,toposition);
+        while(toposition-1>fromposition){
             toposition--;
-            this.SwitchCols(colindex,toposition);
+            this.SwitchPosition(fromposition,toposition);
         }
-        while(toposition+1<fromindex){
+        while(toposition+1<fromposition){
             toposition++;
-            this.SwitchCols(colindex,toposition);
+            this.SwitchPosition(fromposition,toposition);
         }
     }
     SortAll(){
         const saveheaders = this.ReportRows.shift();
-        for(let i=this.ReportCols.length-1;i>-1;i--){
-            let c: Report.Col = this.ReportCols[i];
-            if(!c.Exclude) {
-                if(c.Group.show && !c.Sort) {
-                    c.Sort = 1;
-                } 
-                if(c.Sort) this.SortData(c.Sort,c);
-            }
-
-        }
+        const cols = this.ReportCols.filter(function(e){ return e.Position>-1; });
+        cols.sort(function(a,b){
+            return a.Position - b.Position;
+        })
+        for(let i=cols.length-1;i>-1;i--){
+            let c: Report.Col = cols[i];
+            if(c.Group.show && !c.Sort) {
+                c.Sort = 1;
+            } 
+            if(c.Sort) this.SortData(c.Sort,c);
+         }
         this.ReportRows.unshift(saveheaders);
     }
     SortData(direction,col:Report.Col) {
@@ -316,6 +310,7 @@ class Report {
         let c = {
             Header: 'Total',
             Index: this.ReportCols.length,
+            Position: this.ReportCols.length,
             ShowSettingsIcon: true
         }
         const newCol = new Report.Col(c);
@@ -358,6 +353,7 @@ namespace Report {
     export class Col {
         Header ? : string;
         Index: number;
+        Position: number;
         Sort ? : Sort;
         Group ? : ColumnInfo = {
             show: false,
@@ -376,7 +372,6 @@ namespace Report {
             formats: []
         };
         ShowSettingsIcon ? : boolean = false;
-        Exclude ? : boolean = false;
         constructor(json_in: any) {
             $.extend(this, json_in);
         }
@@ -450,7 +445,7 @@ namespace Report {
         let subtotalrow = `<tr>`;
         for (let i=0; i<ReportCols.length; i++) {
             const c: Col = ReportCols[i];
-            if (c.Exclude) continue;
+            if (c.Position<0) continue;
             let subformat: IFormatReturn;
             if (c.SubTotal.show) {
                 subformat = Report.applyFormat(c.SubTotal, subtotals[subtot]);
@@ -470,7 +465,7 @@ namespace Report {
         let finalformat: IFormatReturn;
         for (let i=0; i<ReportCols.length; i++) {
             const c: Col = ReportCols[i];
-            if (c.Exclude) continue;
+            if (c.Position<0) continue;
             if (c.FinalTotal.show) {
                 finalformat = Report.applyFormat(c.FinalTotal, finalTotals[fintot]);
                 fintot++;

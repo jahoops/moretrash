@@ -20,12 +20,14 @@ var Report = /** @class */ (function () {
                 if ($.isNumeric(val)) {
                     colInspect.push({
                         Index: c,
+                        Position: c,
                         IsNumber: true
                     });
                 }
                 else {
                     colInspect.push({
                         Index: c,
+                        Position: c,
                         IsNumber: false
                     });
                 }
@@ -35,6 +37,7 @@ var Report = /** @class */ (function () {
                 var c = {
                     Header: this.ReportRows[0][ci.Index],
                     Index: ci.Index,
+                    Position: ci.Index,
                     ShowSettingsIcon: true
                 };
                 var newCol = new Report.Col(c);
@@ -59,20 +62,21 @@ var Report = /** @class */ (function () {
     };
     Report.prototype.Render = function (el, reRender) {
         var groupValues = [];
-        var hasGroups = false;
         var subTotals = [];
         var hasSubTotals = false;
         var hasSubTotalsByGroup = [];
         var finalTotals = [];
         var hasFinalTotals = false;
-        for (var i = 0; i < this.ReportCols.length; i++) {
-            if (this.ReportCols[i].Exclude)
-                continue;
-            if (this.ReportCols[i].Group.show) {
-                hasGroups = true;
+        var cols = this.ReportCols.filter(function (e) { return e.Position > -1; });
+        cols.sort(function (a, b) {
+            return a.Position - b.Position;
+        });
+        for (var i = 0; i < cols.length; i++) {
+            var c = cols[i];
+            if (c.Group.show) {
                 groupValues.push(undefined);
             }
-            if (this.ReportCols[i].FinalTotal.show) {
+            if (c.FinalTotal.show) {
                 hasFinalTotals = true;
                 finalTotals.push(0);
             }
@@ -80,10 +84,9 @@ var Report = /** @class */ (function () {
         for (var g = 0; g < groupValues.length; g++) {
             subTotals.push([]);
             hasSubTotalsByGroup[g] = false;
-            for (var i = 0; i < this.ReportCols.length; i++) {
-                if (this.ReportCols[i].Exclude)
-                    continue;
-                if (this.ReportCols[i].SubTotal.show) {
+            for (var i = 0; i < cols.length; i++) {
+                var c = cols[i];
+                if (c.SubTotal.show) {
                     hasSubTotals = true;
                     hasSubTotalsByGroup[g] = true;
                     subTotals[g].push(0);
@@ -91,11 +94,9 @@ var Report = /** @class */ (function () {
             }
         }
         var thead = "<thead><tr>";
-        for (var i = 0; i < this.ReportCols.length; i++) {
-            if (this.ReportCols[i].Exclude)
-                continue;
-            var c = this.ReportCols[i];
-            thead += c.ShowSettingsIcon ? "<th colindex=\"" + c.Index + "\"><span>" + c.Header + "</span></th>" : "<th>" + c.Header + "</th>";
+        for (var i = 0; i < cols.length; i++) {
+            var c = cols[i];
+            thead += c.ShowSettingsIcon ? "<th colposition=\"" + c.Position + "\" colindex=\"" + c.Index + "\"><span>" + c.Header + "</span></th>" : "<th>" + c.Header + "</th>";
         }
         thead += "</tr></thead>";
         var tbody = reRender == 'body' ? "" : "<tbody>";
@@ -106,10 +107,8 @@ var Report = /** @class */ (function () {
             var fintot = 0;
             // save next row in detailrow
             var detailrow = "<tr>";
-            for (var i = 0; i < this.ReportCols.length; i++) {
-                if (this.ReportCols[i].Exclude)
-                    continue;
-                var c = this.ReportCols[i];
+            for (var i = 0; i < cols.length; i++) {
+                var c = cols[i];
                 // calculated field check 
                 var thisVal = r[c.Index];
                 if (c.SubTotal.show) {
@@ -135,10 +134,8 @@ var Report = /** @class */ (function () {
                         }
                         // insert group header row to tbody now
                         var grouprow = "<tr>";
-                        for (var _i = 0, _a = this.ReportCols; _i < _a.length; _i++) {
-                            var group_c = _a[_i];
-                            if (group_c.Exclude)
-                                continue;
+                        for (var g = 0; g < cols.length; g++) {
+                            var group_c = cols[g];
                             var format = Report.applyFormat(c.Group);
                             grouprow += thisCol === group_c.Index ? "<td" + format.classes + ">" + thisVal + "</td>" : "<td></td>";
                         }
@@ -187,38 +184,29 @@ var Report = /** @class */ (function () {
         formatdiv += "</div>";
         return formatsonly ? formats : formatdiv;
     };
-    Report.prototype.ColEditForm = function (colindex) {
-        var cols = this.ReportCols;
-        var col = cols[colindex];
-        var i = Number(colindex);
-        var l = cols.length;
-        var j = i - 1;
-        for (j; j > -1; j--) {
-            if (!cols[j].Exclude)
-                break;
-        }
-        var prev_col = j == -1 ? false : cols[j];
-        j = i + 1;
-        for (j; j < l; j++) {
-            if (!cols[j].Exclude)
-                break;
-        }
-        var next_col = j == l ? false : cols[j];
-        var form = "\n            <div class=\"columneditform btn-group dropright btn-group-sm pl-2\">\n                <a class=\"btn excludecheckbox\" section=\"" + 'Exclude' + "\" colindex=\"" + colindex + "\" href=\"#\"><i class=\"fa fa-check-square-o\"></a></i>\n                <a class=\"btn dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\"><i class=\"fa fa-gear\"></i></a>\n                <ul class=\"dropdown-menu\" colindex=\"" + colindex + "\">";
+    Report.prototype.ColEditForm = function (posindex) {
+        var cols = this.ReportCols.filter(function (e) { return e.Position > -1; });
+        cols.sort(function (a, b) {
+            return a.Position - b.Position;
+        });
+        var col = cols.filter(function (e) { return e.Position == posindex; });
+        var prev_col = col[0].Position > 0 ? cols[col[0].Position - 1] : false;
+        var next_col = col[0].Position < cols.length - 1 ? cols[col[0].Position + 1] : false;
+        var form = "\n            <div class=\"columneditform btn-group dropright btn-group-sm pl-2\">\n                <a class=\"btn excludecheckbox\" section=\"" + 'Exclude' + "\" colposition=\"" + col[0].Position + "\" colindex=\"" + col[0].Index + "\" href=\"#\"><i class=\"fa fa-check-square-o\"></a></i>\n                <a class=\"btn dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\"><i class=\"fa fa-gear\"></i></a>\n                <ul class=\"dropdown-menu\" colposition=\"" + col[0].Position + "\" colindex=\"" + col[0].Index + "\">";
         for (var _i = 0, _a = ['Header']; _i < _a.length; _i++) {
             var section = _a[_i];
             form += "<div class='p-0 m-0 text-center'>";
-            form += i > 0 && !col.Group.show && (prev_col && !prev_col.Group.show) ? "<i class=\"moveleft clickable fa fa-arrow-left\"></i>" : "<i class=\"moveleft gray fa fa-arrow-left\"></i>";
-            form += col.Group.show ? " grouped " : " move ";
-            form += colindex < l - 1 && !col.Group.show && (next_col && !next_col.Group.show) ? "<i class=\"moveright clickable fa fa-arrow-right\"></i></div>" : "<i class=\"moveright gray fa fa-arrow-right\"></i></div>";
-            form += "<li class=\"p-2\">" + section + ":<input class=\"rg-watch\" type=\"text\" section=\"" + section + "\" value=\"" + col[section] + "\"></li>";
+            form += col[0].Position > 0 && !col[0].Group.show && (prev_col && !prev_col.Group.show) ? "<i class=\"moveleft clickable fa fa-arrow-left\"></i>" : "<i class=\"moveleft gray fa fa-arrow-left\"></i>";
+            form += col[0].Group.show ? " grouped " : " move ";
+            form += col[0].Position < cols.length - 1 && !col[0].Group.show && (next_col && !next_col.Group.show) ? "<i class=\"moveright clickable fa fa-arrow-right\"></i></div>" : "<i class=\"moveright gray fa fa-arrow-right\"></i></div>";
+            form += "<li class=\"p-2\">" + section + ":<input class=\"rg-watch\" type=\"text\" section=\"" + section + "\" value=\"" + col[0][section] + "\"></li>";
         }
         for (var _b = 0, _c = ['Detail', 'Group', 'SubTotal', 'FinalTotal']; _b < _c.length; _b++) {
             var section = _c[_b];
-            var colinfo = col[section];
+            var colinfo = col[0][section];
             var checked = colinfo.show ? ' checked=checked' : '';
             form += "<li class=\"px-2\">" + section + ":<div class=\"form-check form-check-inline\">\n                    <input class=\"form-check-input rg-watch ml-2\" section=\"" + section + "\" type=\"checkbox\" " + checked + "}\">\n                    <a href=\"#\" class=\"addformatlink font-weight-light font-italic small ml-2\" section=\"" + section + "\">add format</a></li>";
-            form += this.ColEditFormats(colindex, section);
+            form += this.ColEditFormats(col[0].Index, section);
         }
         form += "</ul>\n            </div>";
         return form;
@@ -228,46 +216,45 @@ var Report = /** @class */ (function () {
         return form;
     };
     Report.prototype.SetGroupColumns = function () {
-        var groups = this.ReportCols.filter(function (e) { return e.Group.show && !e.Exclude; });
+        var groups = this.ReportCols.filter(function (e) { return e.Group.show && e.Position > -1; });
+        groups.sort(function (a, b) {
+            return a.Position - b.Position;
+        });
         for (var i = 0; i < groups.length; i++) {
-            this.MoveColToPos(groups[i].Index, i);
+            this.MoveToPosition(groups[i].Position, i);
         }
         this.SortAll();
     };
-    Report.prototype.SwitchCols = function (fromindex, toindex) {
-        var saveToCol = this.ReportCols[toindex];
-        this.ReportCols[toindex] = this.ReportCols[fromindex];
-        this.ReportCols[fromindex] = saveToCol;
+    Report.prototype.SwitchPosition = function (fromposition, toposition) {
+        var from = this.ReportCols.filter(function (e) { return e.Position == fromposition; });
+        var to = this.ReportCols.filter(function (e) { return e.Position == toposition; });
+        from[0].Position = toposition;
+        to[0].Position = fromposition;
     };
-    Report.prototype.MoveColToPos = function (colindex, toposition) {
-        var i;
-        for (i = 0; i < this.ReportCols.length; i++) {
-            if (this.ReportCols[i].Index == colindex) {
-                break;
-            }
-        }
-        var fromindex = i;
-        this.SwitchCols(fromindex, toposition);
-        while (toposition - 1 > fromindex) {
+    Report.prototype.MoveToPosition = function (fromposition, toposition) {
+        this.SwitchPosition(fromposition, toposition);
+        while (toposition - 1 > fromposition) {
             toposition--;
-            this.SwitchCols(colindex, toposition);
+            this.SwitchPosition(fromposition, toposition);
         }
-        while (toposition + 1 < fromindex) {
+        while (toposition + 1 < fromposition) {
             toposition++;
-            this.SwitchCols(colindex, toposition);
+            this.SwitchPosition(fromposition, toposition);
         }
     };
     Report.prototype.SortAll = function () {
         var saveheaders = this.ReportRows.shift();
-        for (var i = this.ReportCols.length - 1; i > -1; i--) {
-            var c = this.ReportCols[i];
-            if (!c.Exclude) {
-                if (c.Group.show && !c.Sort) {
-                    c.Sort = 1;
-                }
-                if (c.Sort)
-                    this.SortData(c.Sort, c);
+        var cols = this.ReportCols.filter(function (e) { return e.Position > -1; });
+        cols.sort(function (a, b) {
+            return a.Position - b.Position;
+        });
+        for (var i = cols.length - 1; i > -1; i--) {
+            var c = cols[i];
+            if (c.Group.show && !c.Sort) {
+                c.Sort = 1;
             }
+            if (c.Sort)
+                this.SortData(c.Sort, c);
         }
         this.ReportRows.unshift(saveheaders);
     };
@@ -306,6 +293,7 @@ var Report = /** @class */ (function () {
         var c = {
             Header: 'Total',
             Index: this.ReportCols.length,
+            Position: this.ReportCols.length,
             ShowSettingsIcon: true
         };
         var newCol = new Report.Col(c);
@@ -361,7 +349,6 @@ var Report = /** @class */ (function () {
                 formats: []
             };
             this.ShowSettingsIcon = false;
-            this.Exclude = false;
             $.extend(this, json_in);
         }
         return Col;
@@ -438,7 +425,7 @@ var Report = /** @class */ (function () {
         var subtotalrow = "<tr>";
         for (var i = 0; i < ReportCols.length; i++) {
             var c = ReportCols[i];
-            if (c.Exclude)
+            if (c.Position < 0)
                 continue;
             var subformat = void 0;
             if (c.SubTotal.show) {
@@ -461,7 +448,7 @@ var Report = /** @class */ (function () {
         var finalformat;
         for (var i = 0; i < ReportCols.length; i++) {
             var c = ReportCols[i];
-            if (c.Exclude)
+            if (c.Position < 0)
                 continue;
             if (c.FinalTotal.show) {
                 finalformat = Report.applyFormat(c.FinalTotal, finalTotals[fintot]);

@@ -11,10 +11,11 @@ $(function () {
 
     var report;
     var reportlist=[];
+    var pivotJSON = {};
 
     $('#saveReportButton').on('click', function(e){
         e.preventDefault();
-        RBsavereport();
+        RBsavereport(report, pivotJSON);
     });
 
     $('#addrowtotal').on('click', function(){
@@ -27,7 +28,7 @@ $(function () {
     var opts = RBreturndatasources();
     $('#dataSource').html(opts);
 
-    RBloadsaved();
+    RBloadsaved(varlist, report, loadReport);
 
     $('#dataSource').on('change', function () {
         var selected = $('option:selected', this);
@@ -35,14 +36,20 @@ $(function () {
 
         $('#reportTable').empty();
 
-        RBloadtable(loadReport);
+        RBloadtable(varlist, loadReport);
     });
 
-    function loadReport(jsonData) {
+    function loadReport(jsonData, jsonReport) {
         if (report) {
             report.Clear();
         }
-        report = new Report(jsonData);
+        if(jsonReport) {
+            report = new Report(jsonData, jsonReport.reportCols, jsonReport.reportName, '1.0');
+            debugger;
+            pivotJSON = JSON.parse(jsonReport.pivotJSON);
+        } else {
+            report = new Report(jsonData);
+        }         
         renderReport();
     }
 
@@ -54,8 +61,7 @@ $(function () {
     }
 
     function renderPivot(){
-        console.log(report.ReportRows);
-        $("#pivotjs").pivotUI(report.ReportRows,{
+        var defaultJSON = {
             aggregatorName: "Sum",
             renderers: $.extend(
                     $.pivotUtilities.renderers,
@@ -63,8 +69,20 @@ $(function () {
                     $.pivotUtilities.d3_renderers,
                     $.pivotUtilities.plotly_renderers,
                     $.pivotUtilities.export_renderers
-            )
-        });
+            ),
+            onRefresh: function(config) {
+                var config_copy = JSON.parse(JSON.stringify(config));
+                //delete some values which are functions
+                delete config_copy["aggregators"];
+                delete config_copy["renderers"];
+                //delete some bulky default values
+                delete config_copy["rendererOptions"];
+                delete config_copy["localeStrings"];
+                pivotJSON = JSON.stringify(config_copy, undefined, 2);
+            }
+        };
+        $.extend(defaultJSON, pivotJSON);
+        $("#pivotjs").pivotUI(report.ReportRows,defaultJSON);
     }
 
     function setHeaders() {
@@ -73,24 +91,22 @@ $(function () {
         $('#reportTable').append($(formatselect));
         
         $("th").each(function () {
-            var colindex = $(this).attr('colindex');
-            if ($.isNumeric(colindex)) {
-                var colinfo = report.ColEditForm(colindex);
+            var colposition = $(this).attr('colposition');
+            if ($.isNumeric(colposition)) {
+                var colinfo = report.ColEditForm(colposition);
                 $(this).append($(colinfo));
             }
         });
         $("th .moveleft").on('click', function () {
-            var fromindex = $(this).closest('ul').attr('colindex');
+            var fromindex = $(this).closest('ul').attr('colposition');
             var toindex = Number(fromindex) - 1;
-            var saveToCol = report.ReportCols[toindex];
-            report.ReportCols[toindex] = report.ReportCols[fromindex];
-            report.ReportCols[fromindex] = saveToCol;
+            report.MoveToPosition(fromindex,toindex);
             renderReport(true);
         });
         $("th .moveright").on('click', function () {
-            var fromindex = $(this).closest('ul').attr('colindex');
+            var fromindex = $(this).closest('ul').attr('colposition');
             var toindex = Number(fromindex) + 1;
-            report.moveCol(fromindex,toindex);
+            report.MoveToPosition(fromindex,toindex);
             renderReport(true);
         });
         $("th .excludecheckbox").on('click', function () {
