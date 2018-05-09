@@ -1,10 +1,11 @@
 class Report {
     ReportName: string;
+    ReportDataCall: string;
     ReportCols: Report.Col[] = [];
     ReportRows: any[][] = [];
     ReportVersion: string;
-    ReportPivot?: object;
-    constructor(rowData: any[][], columnInfo ? : any, name ? : string, version ? : string) {
+    constructor(dataCall: string, rowData: any[][], columnInfo ? : any, name ? : string, version ? : string) {
+        this.ReportDataCall = dataCall;
         for (let r = 0; r<rowData.length; r++) {
             this.ReportRows.push(rowData[r]);
         }

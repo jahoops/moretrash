@@ -1,7 +1,8 @@
 var Report = /** @class */ (function () {
-    function Report(rowData, columnInfo, name, version) {
+    function Report(dataCall, rowData, columnInfo, name, version) {
         this.ReportCols = [];
         this.ReportRows = [];
+        this.ReportDataCall = dataCall;
         for (var r = 0; r < rowData.length; r++) {
             this.ReportRows.push(rowData[r]);
         }

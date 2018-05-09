@@ -10,12 +10,19 @@ $(function () {
     varlist.plotby = params.get('plotby') ? params.get('plotby').toString() : '';
 
     var report;
-    var reportlist=[];
     var pivotJSON = {};
 
     $('#saveReportButton').on('click', function(e){
         e.preventDefault();
+        var newname = $('#reportName').val();
+        if(!newname) {
+            $('#reportName').focus();
+            alert('No name selected');
+            return;
+        }
+        report.ReportName = newname; 
         RBsavereport(report, pivotJSON);
+        loadsavedreports();
     });
 
     $('#addrowtotal').on('click', function(){
@@ -25,30 +32,37 @@ $(function () {
         }
     });
 
-    var opts = RBreturndatasources();
-    $('#dataSource').html(opts);
+    function loadsavedreports(){
+        var opts = RBreturnsavedreports();
+        $('#savedReportList').html(opts);   
+    }
+    loadsavedreports();
 
-    RBloadsaved(varlist, report, loadReport);
-
-    $('#dataSource').on('change', function () {
-        var selected = $('option:selected', this);
-        if (!selected) return;
-
-        $('#reportTable').empty();
-
-        RBloadtable(varlist, loadReport);
+    $('#savedReportList').on('change', function () {
+        var reportname = $('option:selected', this).val();
+        if (!reportname) return;
+        $('#reportName').val(reportname);
+        RBreturndata({ reportname:reportname, datacall:false, varlist:varlist }, loadReport);
     });
 
-    function loadReport(jsonData, jsonReport) {
+    opts = RBreturndatasources();
+    $('#dataSource').html(opts);
+
+    $('#dataSource').on('change', function () {
+        var datacall = $('option:selected', this).val();
+        if (!datacall) return;
+        RBreturndata({ reportname:false, datacall:datacall, varlist:varlist }, loadReport);
+    });
+
+    function loadReport(reportinfo, jsonData) {
         if (report) {
             report.Clear();
         }
-        if(jsonReport) {
-            report = new Report(jsonData, jsonReport.reportCols, jsonReport.reportName, '1.0');
-            debugger;
-            pivotJSON = JSON.parse(jsonReport.pivotJSON);
+        if(reportinfo.reportname) {
+            report = new Report(reportinfo.datacall, jsonData, reportinfo.reportcols, reportinfo.reportname, '1.0');
+            pivotJSON = JSON.parse(reportinfo.reportpivot);
         } else {
-            report = new Report(jsonData);
+            report = new Report(reportinfo.datacall, jsonData);
         }         
         renderReport();
     }
@@ -82,7 +96,7 @@ $(function () {
             }
         };
         $.extend(defaultJSON, pivotJSON);
-        $("#pivotjs").pivotUI(report.ReportRows,defaultJSON);
+        $("#pivotjs").pivotUI(report.ReportRows,defaultJSON,true);
     }
 
     function setHeaders() {
