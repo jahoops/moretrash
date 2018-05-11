@@ -10,7 +10,7 @@ $(function () {
     varlist.plotby = params.get('plotby') ? params.get('plotby').toString() : '';
 
     var report;
-    var pivotJSON = {};
+    var pivotJSON;
 
     $('#saveReportButton').on('click', function(e){
         e.preventDefault();
@@ -39,10 +39,14 @@ $(function () {
     loadsavedreports();
 
     $('#savedReportList').on('change', function () {
-        var reportname = $('option:selected', this).val();
-        if (!reportname) return;
+        var reportid = $('option:selected', this).val();
+        var reportname = $('option:selected', this).text();
+        if (!reportid) return;
         $('#reportName').val(reportname);
-        RBreturndata({ reportname:reportname, datacall:false, varlist:varlist }, loadReport);
+        RBreturndata({ reportid:reportid, reportname:reportname, datacall:false, varlist:varlist }, loadReport);
+    });
+    $('#refreshPivotChart').on('click', function () {
+        renderPivot();
     });
 
     opts = RBreturndatasources();
@@ -51,15 +55,15 @@ $(function () {
     $('#dataSource').on('change', function () {
         var datacall = $('option:selected', this).val();
         if (!datacall) return;
-        RBreturndata({ reportname:false, datacall:datacall, varlist:varlist }, loadReport);
+        RBreturndata({ reportid:false, datacall:datacall, varlist:varlist }, loadReport);
     });
 
     function loadReport(reportinfo, jsonData) {
         if (report) {
             report.Clear();
         }
-        if(reportinfo.reportname) {
-            report = new Report(reportinfo.datacall, jsonData, reportinfo.reportcols, reportinfo.reportname, '1.0');
+        if(reportinfo.reportid) {
+            report = new Report(reportinfo.datacall, jsonData, reportinfo.reportcols, reportinfo.reportid, reportinfo.reportname, '1.0');
             pivotJSON = JSON.parse(reportinfo.reportpivot);
         } else {
             report = new Report(reportinfo.datacall, jsonData);
@@ -71,10 +75,11 @@ $(function () {
         $('#reportTable').empty();
         report.Render($('#reportTable'),reRender);
         setHeaders();
-        renderPivot();
+        if($("#pivotjs").html()=='') renderPivot();
     }
 
     function renderPivot(){
+        $('#refreshPivotChart').show();
         var defaultJSON = {
             aggregatorName: "Sum",
             renderers: $.extend(
@@ -84,19 +89,22 @@ $(function () {
                     $.pivotUtilities.plotly_renderers,
                     $.pivotUtilities.export_renderers
             ),
+            rendererOptions: {
+                width:500
+            },
             onRefresh: function(config) {
                 var config_copy = JSON.parse(JSON.stringify(config));
                 //delete some values which are functions
-                delete config_copy["aggregators"];
-                delete config_copy["renderers"];
+                delete config_copy['aggregators'];
+                delete config_copy['renderers'];
                 //delete some bulky default values
-                delete config_copy["rendererOptions"];
-                delete config_copy["localeStrings"];
+                delete config_copy['rendererOptions'];
+                delete config_copy['localeStrings'];
                 pivotJSON = JSON.stringify(config_copy, undefined, 2);
             }
         };
         $.extend(defaultJSON, pivotJSON);
-        $("#pivotjs").pivotUI(report.ReportRows,defaultJSON,true);
+        $('#pivotjs').pivotUI(report.ReportRows,defaultJSON,true);
     }
 
     function setHeaders() {
@@ -125,11 +133,9 @@ $(function () {
         });
         $("th .excludecheckbox").on('click', function () {
             var colindex = $(this).attr('colindex');
-            var section = $(this).attr('section');
-            report.ReportCols[colindex][section] = true;
+            report.ReportCols[colindex].Position = -1;
             renderReport(true);
         });
-        var timeout;
         $("th .rg-watch").on('input click', function () {
             var colindex = $(this).closest('ul').attr('colindex');
             var section = $(this).attr('section');
@@ -138,10 +144,6 @@ $(function () {
                     report.ReportCols[colindex][section] = $(this).val();
                     report.ReportRows[0][colindex] = $(this).val();
                     $(this).closest('th').find('span').text(report.ReportCols[colindex][section]);
-                    clearTimeout(timeout); // wait for more input
-                    timeout = setTimeout(function () {
-                        renderPivot();
-                    }, 1000);
                     break;
                 case 'checkbox':
                     report.ReportCols[colindex][section].show = $(this).is(':checked');

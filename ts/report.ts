@@ -1,10 +1,11 @@
 class Report {
+    ReportID: number;
     ReportName: string;
     ReportDataCall: string;
     ReportCols: Report.Col[] = [];
     ReportRows: any[][] = [];
     ReportVersion: string;
-    constructor(dataCall: string, rowData: any[][], columnInfo ? : any, name ? : string, version ? : string) {
+    constructor(dataCall: string, rowData: any[][], columnInfo ? : any, id ? : number, name ? : string, version ? : string) {
         this.ReportDataCall = dataCall;
         for (let r = 0; r<rowData.length; r++) {
             this.ReportRows.push(rowData[r]);
@@ -13,6 +14,7 @@ class Report {
             for (const c of columnInfo) {
                 this.ReportCols.push(new Report.Col(c));
             }
+            this.ReportID = id ? id : -1;
             this.ReportName = name ? name : 'Report Builder';
             this.ReportVersion = version ? version : '1.0';
         } else {
@@ -54,6 +56,7 @@ class Report {
         }
     }
     Clear() {
+        this.ReportID = -1;
         this.ReportName = '';
         this.ReportCols = [];
         this.ReportRows = [];
@@ -67,6 +70,7 @@ class Report {
         let hasSubTotalsByGroup = [];
         const finalTotals = [];
         let hasFinalTotals = false;
+        this.UpdateRowTotalCol();
         const cols = this.ReportCols.filter(function(e){ return e.Position>-1; });
         cols.sort(function(a,b){
             return a.Position - b.Position;
@@ -247,12 +251,18 @@ class Report {
         this.SortAll();
     }
     SwitchPosition(fromposition,toposition){
+        if(fromposition===toposition) return;
         const from = this.ReportCols.filter(function(e){ return e.Position==fromposition; });
         const to = this.ReportCols.filter(function(e){ return e.Position==toposition; });
-        from[0].Position = toposition;
-        to[0].Position = fromposition;
+        if(from[0]) {
+            from[0].Position = toposition;
+        }
+        if(to[0]) {
+            to[0].Position = fromposition;
+        }
     }
     MoveToPosition(fromposition,toposition){
+        if(fromposition===toposition) return;
         this.SwitchPosition(fromposition,toposition);
         while(toposition-1>fromposition){
             toposition--;
@@ -312,7 +322,8 @@ class Report {
             Header: 'Total',
             Index: this.ReportCols.length,
             Position: this.ReportCols.length,
-            ShowSettingsIcon: true
+            ShowSettingsIcon: true,
+            IsRowTotalColumn: true
         }
         const newCol = new Report.Col(c);
         newCol.Detail.formats.push('align right');
@@ -325,10 +336,22 @@ class Report {
         this.ReportRows[0].push('Total')
         for (let r = 1; r<this.ReportRows.length; r++) {
             let calcval = 0;
-            for(const ci in this.ReportRows[r]) {
-                if($.isNumeric(this.ReportRows[r][ci])) calcval += Number(this.ReportRows[r][ci]);
+            for(let ci = 0; ci<this.ReportCols.length; ci++) {
+                if(this.ReportCols[ci].Position>-1 && $.isNumeric(this.ReportRows[r][ci])) calcval += Number(this.ReportRows[r][ci]);
             }
             this.ReportRows[r].push(calcval);
+        }
+    }
+    UpdateRowTotalCol(){
+        const cols = this.ReportCols.filter(function(e){ return e.Position>-1 && e.IsRowTotalColumn; });
+        if(!cols.length) return;
+        const colindex = cols[0].Index;
+        for (let r = 1; r<this.ReportRows.length; r++) {
+            let calcval = 0;
+            for(let ci = 0; ci<this.ReportCols.length; ci++) {
+                if(ci!==colindex && this.ReportCols[ci].Position>-1 && $.isNumeric(this.ReportRows[r][ci])) calcval += Number(this.ReportRows[r][ci]);
+            }
+           this.ReportRows[r][colindex]=calcval;
         }
     }
 }
@@ -373,6 +396,7 @@ namespace Report {
             formats: []
         };
         ShowSettingsIcon ? : boolean = false;
+        IsRowTotalColumn ? : boolean = false;
         constructor(json_in: any) {
             $.extend(this, json_in);
         }

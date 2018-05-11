@@ -1,5 +1,5 @@
 var Report = /** @class */ (function () {
-    function Report(dataCall, rowData, columnInfo, name, version) {
+    function Report(dataCall, rowData, columnInfo, id, name, version) {
         this.ReportCols = [];
         this.ReportRows = [];
         this.ReportDataCall = dataCall;
@@ -11,6 +11,7 @@ var Report = /** @class */ (function () {
                 var c = columnInfo_1[_i];
                 this.ReportCols.push(new Report.Col(c));
             }
+            this.ReportID = id ? id : -1;
             this.ReportName = name ? name : 'Report Builder';
             this.ReportVersion = version ? version : '1.0';
         }
@@ -55,6 +56,7 @@ var Report = /** @class */ (function () {
         }
     }
     Report.prototype.Clear = function () {
+        this.ReportID = -1;
         this.ReportName = '';
         this.ReportCols = [];
         this.ReportRows = [];
@@ -68,6 +70,7 @@ var Report = /** @class */ (function () {
         var hasSubTotalsByGroup = [];
         var finalTotals = [];
         var hasFinalTotals = false;
+        this.UpdateRowTotalCol();
         var cols = this.ReportCols.filter(function (e) { return e.Position > -1; });
         cols.sort(function (a, b) {
             return a.Position - b.Position;
@@ -227,12 +230,20 @@ var Report = /** @class */ (function () {
         this.SortAll();
     };
     Report.prototype.SwitchPosition = function (fromposition, toposition) {
+        if (fromposition === toposition)
+            return;
         var from = this.ReportCols.filter(function (e) { return e.Position == fromposition; });
         var to = this.ReportCols.filter(function (e) { return e.Position == toposition; });
-        from[0].Position = toposition;
-        to[0].Position = fromposition;
+        if (from[0]) {
+            from[0].Position = toposition;
+        }
+        if (to[0]) {
+            to[0].Position = fromposition;
+        }
     };
     Report.prototype.MoveToPosition = function (fromposition, toposition) {
+        if (fromposition === toposition)
+            return;
         this.SwitchPosition(fromposition, toposition);
         while (toposition - 1 > fromposition) {
             toposition--;
@@ -295,7 +306,8 @@ var Report = /** @class */ (function () {
             Header: 'Total',
             Index: this.ReportCols.length,
             Position: this.ReportCols.length,
-            ShowSettingsIcon: true
+            ShowSettingsIcon: true,
+            IsRowTotalColumn: true
         };
         var newCol = new Report.Col(c);
         newCol.Detail.formats.push('align right');
@@ -308,11 +320,25 @@ var Report = /** @class */ (function () {
         this.ReportRows[0].push('Total');
         for (var r = 1; r < this.ReportRows.length; r++) {
             var calcval = 0;
-            for (var ci in this.ReportRows[r]) {
-                if ($.isNumeric(this.ReportRows[r][ci]))
+            for (var ci = 0; ci < this.ReportCols.length; ci++) {
+                if (this.ReportCols[ci].Position > -1 && $.isNumeric(this.ReportRows[r][ci]))
                     calcval += Number(this.ReportRows[r][ci]);
             }
             this.ReportRows[r].push(calcval);
+        }
+    };
+    Report.prototype.UpdateRowTotalCol = function () {
+        var cols = this.ReportCols.filter(function (e) { return e.Position > -1 && e.IsRowTotalColumn; });
+        if (!cols.length)
+            return;
+        var colindex = cols[0].Index;
+        for (var r = 1; r < this.ReportRows.length; r++) {
+            var calcval = 0;
+            for (var ci = 0; ci < this.ReportCols.length; ci++) {
+                if (ci !== colindex && this.ReportCols[ci].Position > -1 && $.isNumeric(this.ReportRows[r][ci]))
+                    calcval += Number(this.ReportRows[r][ci]);
+            }
+            this.ReportRows[r][colindex] = calcval;
         }
     };
     return Report;
@@ -350,6 +376,7 @@ var Report = /** @class */ (function () {
                 formats: []
             };
             this.ShowSettingsIcon = false;
+            this.IsRowTotalColumn = false;
             $.extend(this, json_in);
         }
         return Col;

@@ -36,3 +36,8 @@
 #contentleft {
     max-width: 20%;
 }
+svg.main-svg {
+	height: auto;
+	width: auto;
+	pointer-events: auto;
+} 

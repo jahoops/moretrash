@@ -51,7 +51,6 @@ function RBsavereport(report, pivotJSON) {
     var reportName = report.ReportName;
     var reportDataCall = report.ReportDataCall;
     var reportCols = report.ReportCols;
-    var reportPivot = pivotJSON;
     var reportInfo = {'reportName':reportName,'reportDataCall':reportDataCall, 'reportCols':reportCols,'reportPivot':pivotJSON};
     var found = -1;
     for(var i=0; i<reportlist.length; i++){
@@ -60,7 +59,7 @@ function RBsavereport(report, pivotJSON) {
     if(found>-1){
         var rc = confirm(reportName + ' already exists.  Replace?');
         if(rc) {
-            reportlist[i] = reportInfo;
+            reportlist[found] = reportInfo;
             var savestring = JSON.stringify(reportlist);
             localStorage.setItem('reportlist', savestring);
         }
