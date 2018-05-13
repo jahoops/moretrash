@@ -1,15 +1,17 @@
-System.import('/js/report.js').then(function(rb) {
+var rb;
+System.import('/js/report.js').then(function(module){ rb=module; });
 
 $(function () {
-    var params = new URLSearchParams(location.search.toLowerCase());
     var varlist = {};
-    varlist.deptid = params.get('deptid') ? params.get('deptid').toString() : '';
-    varlist.startdate = params.get('startdate') ? params.get('startdate').toString() : '';
-    varlist.enddate = params.get('enddate') ? params.get('enddate').toString() : '';
-    varlist.teamid = params.get('teamid') ? params.get('teamid').toString() : '';
-    varlist.techid = params.get('techid') ? params.get('techid').toString() : '';
-    varlist.catid = params.get('catid') ? params.get('catid').toString() : '';
-    varlist.plotby = params.get('plotby') ? params.get('plotby').toString() : '';
+        // var params = new URLSearchParams(location.search.toLowerCase());
+        // varlist.deptid = params.get('deptid') ? params.get('deptid').toString() : '';
+        // varlist.startdate = params.get('startdate') ? params.get('startdate').toString() : '';
+        // varlist.enddate = params.get('enddate') ? params.get('enddate').toString() : '';
+        // varlist.teamid = params.get('teamid') ? params.get('teamid').toString() : '';
+        // varlist.techid = params.get('techid') ? params.get('techid').toString() : '';
+        // varlist.catid = params.get('catid') ? params.get('catid').toString() : '';
+        // varlist.plotby = params.get('plotby') ? params.get('plotby').toString() : '';
+        console.log('no urlsearchparams in ___ReportBuilder.js');
 
     var report;
     var pivotJSON;
@@ -226,6 +228,4 @@ $(function () {
             bindFormatEvents();
         });
     }
-});
-
 });

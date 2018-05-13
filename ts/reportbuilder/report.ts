@@ -247,18 +247,12 @@ class Report {
         let form:string = `
             <div id="formatSelectForm" class="position-absolute bg-info border rounded border--dark" style="display:none; z-index:1001;">
                 <div class="d-flex flex-column m-0">
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">
-                    align right</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">
-                    hilite</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">
-                    number</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">
-                    two decimal</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">
-                    date</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">
-                    text</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">align right</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">hilite</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">number</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">two decimal</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">date</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">text</div>
                 </div>
             </div>`;
         return form;
