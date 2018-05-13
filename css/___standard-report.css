@@ -21,6 +21,9 @@
 .hilite {
     background-color: #FFFFDD !important;
 }
+.bg-red {
+    background-color: red !important;
+}
 .subtotalrow {
     font-weight: bold;
     background-color: #FFFFDD !important;

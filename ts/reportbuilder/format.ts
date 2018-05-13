@@ -12,12 +12,16 @@ function  getFormat(formatname:string):IFormat {
         return {type:"class", value:"text-right"};
     case "hilite":
         return {type:"class", value:"hilite"};
+    case "background red":
+        return {type:"class", value:"bg-red"};
     case "number":
         return {type:"number", value:"n"};
     case "two decimal":
         return {type:"number", value:".99"};
-    case "date":
-        return {type:"date", value:"date"};
+    case "date MM/DD/YYYY":
+        return {type:"date", value:"MM/DD/YYYY"};
+    case "date MM/YYYY":
+        return {type:"date", value:"MM/YYYY"};
     default:
         if(formatname.slice(0,5)==="text=") {
             return {type:"text", value:formatname.slice(5)};
@@ -47,7 +51,7 @@ export function applyFormat(formats: string[], data ? : any): IFormatReturn {
                 }
                 break;
             case "date":
-                formatReturn.formatted = moment(data).format("MM/DD/YYYY");
+                formatReturn.formatted = moment(data).format(format.value);
                 break;
             case "text":
                 const tarray:string[] = format.value.split("{val}");

@@ -247,17 +247,19 @@ class Report {
         let form:string = `
             <div id="formatSelectForm" class="position-absolute bg-info border rounded border--dark" style="display:none; z-index:1001;">
                 <div class="d-flex flex-column m-0">
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">align right</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1
+                     bg-light clickable">align right</div>
                     <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">hilite</div>
                     <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">number</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">two decimal</div>
+                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1
+                     bg-light clickable">two decimal</div>
                     <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">date</div>
                     <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">text</div>
                 </div>
             </div>`;
         return form;
     }
-    SetGroupColumns():void {
+    private SetGroupColumns():void {
         const groups:Col[] = this.ReportCols.filter(col => { return col.Group.show && col.Position>-1; });
         groups.sort(function(a:Col,b:Col):number {
             return a.Position - b.Position;
@@ -267,7 +269,7 @@ class Report {
         }
         this.SortAll();
     }
-    SwitchPosition(fromposition:number,toposition:number):void {
+    private SwitchPosition(fromposition:number,toposition:number):void {
         if(fromposition===toposition) { return; }
         const from:Col[] = this.ReportCols.filter(col => { return col.Position===fromposition; });
         const to:Col[] = this.ReportCols.filter(col => { return col.Position===toposition; });
@@ -290,7 +292,7 @@ class Report {
             this.SwitchPosition(fromposition,toposition);
         }
     }
-    SortAll():void {
+    private SortAll():void {
         const saveheaders:any = this.ReportRows.shift();
         const cols:Col[] = this.ReportCols.filter(col => { return col.Position>-1; });
         cols.sort(function(a:Col,b:Col):number {
@@ -359,7 +361,7 @@ class Report {
             this.ReportRows[r].push(calcval);
         }
     }
-    UpdateRowTotalCol():void {
+    private UpdateRowTotalCol():void {
         const cols:Col[] = this.ReportCols.filter(col => { return col.Position>-1 && col.IsRowTotalColumn; });
         if(!cols.length) { return; }
         const colindex:number = cols[0].Index;
@@ -372,7 +374,7 @@ class Report {
            this.ReportRows[r][colindex]=calcval;
         }
     }
-    subTotalRow(ReportCols: Col[], subtotals:number[]): string {
+    private subTotalRow(ReportCols: Col[], subtotals:number[]): string {
         let subtot:number = 0;
         let subtotalrow:string = `<tr>`;
         for (let i:number=0; i<ReportCols.length; i++) {
@@ -391,7 +393,7 @@ class Report {
         subtotalrow += `</tr>`;
         return subtotalrow;
     }
-    finalTotalRow(ReportCols: Col[],finalTotals:number[]): string {
+    private finalTotalRow(ReportCols: Col[],finalTotals:number[]): string {
         let fintot:number = 0;
         let finaltotalrow:string = `<tr>`;
         let finalformat: IFormatReturn;

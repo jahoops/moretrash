@@ -55,12 +55,16 @@ System.register("format", [], function (exports_2, context_2) {
                 return { type: "class", value: "text-right" };
             case "hilite":
                 return { type: "class", value: "hilite" };
+            case "background red":
+                return { type: "class", value: "bg-red" };
             case "number":
                 return { type: "number", value: "n" };
             case "two decimal":
                 return { type: "number", value: ".99" };
-            case "date":
-                return { type: "date", value: "date" };
+            case "date MM/DD/YYYY":
+                return { type: "date", value: "MM/DD/YYYY" };
+            case "date MM/YYYY":
+                return { type: "date", value: "MM/YYYY" };
             default:
                 if (formatname.slice(0, 5) === "text=") {
                     return { type: "text", value: formatname.slice(5) };
@@ -91,7 +95,7 @@ System.register("format", [], function (exports_2, context_2) {
                     }
                     break;
                 case "date":
-                    formatReturn.formatted = moment(data).format("MM/DD/YYYY");
+                    formatReturn.formatted = moment(data).format(format.value);
                     break;
                 case "text":
                     var tarray = format.value.split("{val}");
@@ -365,7 +369,7 @@ System.register(["column", "format"], function (exports_3, context_3) {
                     return form;
                 };
                 Report.prototype.FormatSelectForm = function () {
-                    var form = "\n            <div id=\"formatSelectForm\" class=\"position-absolute bg-info border rounded border--dark\" style=\"display:none; z-index:1001;\">\n                <div class=\"d-flex flex-column m-0\">\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">align right</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">hilite</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">number</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">two decimal</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">date</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">text</div>\n                </div>\n            </div>";
+                    var form = "\n            <div id=\"formatSelectForm\" class=\"position-absolute bg-info border rounded border--dark\" style=\"display:none; z-index:1001;\">\n                <div class=\"d-flex flex-column m-0\">\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1\n                     bg-light clickable\">align right</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">hilite</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">number</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1\n                     bg-light clickable\">two decimal</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">date</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">text</div>\n                </div>\n            </div>";
                     return form;
                 };
                 Report.prototype.SetGroupColumns = function () {
