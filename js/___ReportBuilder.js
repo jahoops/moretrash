@@ -1,3 +1,5 @@
+System.import('/js/report.js').then(function(rb) {
+
 $(function () {
     var params = new URLSearchParams(location.search.toLowerCase());
     var varlist = {};
@@ -27,8 +29,8 @@ $(function () {
 
     $('#addrowtotal').on('click', function(){
         if(report) {
-             report.AddRowCol();
-             renderReport();
+            report.AddRowCol();
+            renderReport();
         }
     });
 
@@ -45,8 +47,19 @@ $(function () {
         $('#reportName').val(reportname);
         RBreturndata({ reportid:reportid, reportname:reportname, datacall:false, varlist:varlist }, loadReport);
     });
+
     $('#refreshPivotChart').on('click', function () {
         renderPivot();
+    });
+
+    $('#hidePivotEditor').on('click', function () {
+        if($(this).text()[0]=='H'){
+            $('.pvtAxisContainer, .pvtVals').hide();
+            $(this).text('Show Chart Editor');
+        } else {
+            $('.pvtAxisContainer, .pvtVals').show();
+            $(this).text('Hide Chart Editor');
+        }
     });
 
     opts = RBreturndatasources();
@@ -63,10 +76,10 @@ $(function () {
             report.Clear();
         }
         if(reportinfo.reportid) {
-            report = new Report(reportinfo.datacall, jsonData, reportinfo.reportcols, reportinfo.reportid, reportinfo.reportname, '1.0');
+            report = new rb.default(reportinfo.datacall, jsonData, reportinfo.reportcols, reportinfo.reportid, reportinfo.reportname, '1.0');
             pivotJSON = JSON.parse(reportinfo.reportpivot);
         } else {
-            report = new Report(reportinfo.datacall, jsonData);
+            report = new rb.default(reportinfo.datacall, jsonData);
         }         
         renderReport();
     }
@@ -80,6 +93,7 @@ $(function () {
 
     function renderPivot(){
         $('#refreshPivotChart').show();
+        $('#hidePivotEditor').show();
         var defaultJSON = {
             aggregatorName: "Sum",
             renderers: $.extend(
@@ -212,4 +226,6 @@ $(function () {
             bindFormatEvents();
         });
     }
+});
+
 });

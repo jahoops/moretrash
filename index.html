@@ -21,7 +21,7 @@
     <title>Report</title>
 </head>
 <body>
-<div id="reportBuilder" class="container-fluid" style="background-color:whitesmoke;">
+<div id="reportBuilder" class="container-fluid pt-4" style="background-color:whitesmoke;">
     <div class="row">
         <form class="col needs-validation" onsubmit="saveReport()">
             <div class="form-row">
@@ -57,8 +57,11 @@
             <table class="m-auto table table-striped table-bordered table-responsive" id="reportTable"></table>
         </div>
     </div>
-    <div class="row">
+    <div class="row mb-5">
         <div class="col m-3">
+            <button id="refreshPivotChart" type="submit" class="m-1 float-right btn btn-danger collapse">Reset Chart</button>
+            <button id="hidePivotEditor" type="submit" class="m-1 float-right btn btn-warning collapse">Hide Chart Editor</button>
+            <div class="collapse" id="pivotcontents"></div>
             <div id="pivotjs"></div>
         </div>
     </div>
@@ -71,7 +74,7 @@
     <script src="js/d3-3.5.6.min.js"></script>
     <script src="js/c3.min.js"></script>
     <script src="js/pivot.js"></script>
-    <script src="js/report.js"></script>
+    <script src="js/system.js"></script>
     <script src="js/___ReportBuilder.js"></script>
     <script src="js/___RBgetdata.js"></script>
     <script src="js/plotly.min.js"></script>

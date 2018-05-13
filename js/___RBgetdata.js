@@ -7,7 +7,10 @@ function RBreturndata(reportinfo, callback) {
                 reportinfo.datacall = reportlist[i].reportDataCall;
                 reportinfo.reportcols = reportlist[i].reportCols;
                 reportinfo.reportpivot = reportlist[i].reportPivot;
-                callback(reportinfo, getdatafromdataset(reportinfo.datacall));
+                var data = getdatafromdataset(reportinfo.datacall);
+                for(i=0;i<reportinfo.reportcols.length;i++)
+                    data[0][i] = reportinfo.reportcols[i].Header;
+                callback(reportinfo, data);
                 break; 
             }
         }

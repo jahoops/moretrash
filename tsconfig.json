@@ -3,17 +3,16 @@
       "noImplicitAny": false,
       "noEmitOnError": true,
       "removeComments": false,
+      "module":"system",
       "sourceMap": true,
       "target": "es5",
-      "outDir": "js"
+      "outFile": "js/report.js"
     },
     "include": [
-      "ts/jquery.d.ts",
-      "ts/moment.d.ts"
+      "ts/typelibs/*.ts",
+      "ts/reportbuilder/*.ts"
     ],
-    "files": [
-      "ts/report.ts"
-    ],
+
     "compileOnSave": true
   }
   

@@ -1,129 +1,6 @@
-System.register("column", [], function (exports_1, context_1) {
+System.register(["./column", "./format"], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
-    var ColumnInfo, Sort, Col;
-    return {
-        setters: [],
-        execute: function () {
-            ColumnInfo = /** @class */ (function () {
-                function ColumnInfo() {
-                    this.formats = [];
-                }
-                return ColumnInfo;
-            }());
-            exports_1("ColumnInfo", ColumnInfo);
-            (function (Sort) {
-                Sort[Sort["none"] = 0] = "none";
-                Sort[Sort["asc"] = 1] = "asc";
-                Sort[Sort["desc"] = 2] = "desc";
-            })(Sort || (Sort = {}));
-            Col = /** @class */ (function () {
-                function Col(json_in) {
-                    this.Group = {
-                        show: false,
-                        formats: []
-                    };
-                    this.Detail = {
-                        show: true,
-                        formats: []
-                    };
-                    this.SubTotal = {
-                        show: false,
-                        formats: []
-                    };
-                    this.FinalTotal = {
-                        show: false,
-                        formats: []
-                    };
-                    this.IsNumber = false;
-                    this.ShowSettingsIcon = false;
-                    this.IsRowTotalColumn = false;
-                    $.extend(this, json_in);
-                }
-                return Col;
-            }());
-            exports_1("Col", Col);
-        }
-    };
-});
-System.register("format", [], function (exports_2, context_2) {
-    "use strict";
-    var __moduleName = context_2 && context_2.id;
-    function getFormat(formatname) {
-        switch (formatname) {
-            case "align right":
-                return { type: "class", value: "text-right" };
-            case "hilite":
-                return { type: "class", value: "hilite" };
-            case "number":
-                return { type: "number", value: "n" };
-            case "two decimal":
-                return { type: "number", value: ".99" };
-            case "date":
-                return { type: "date", value: "date" };
-            default:
-                if (formatname.slice(0, 5) === "text=") {
-                    return { type: "text", value: formatname.slice(5) };
-                }
-                return null;
-        }
-    }
-    function applyFormat(formats, data) {
-        var formatReturn = {
-            classes: "",
-            formatted: data
-        };
-        for (var _i = 0, formats_1 = formats; _i < formats_1.length; _i++) {
-            var f = formats_1[_i];
-            var format = getFormat(f);
-            switch (format.type) {
-                case "class":
-                    formatReturn.classes += format.type === "class" ? format.value + " " : "";
-                    break;
-                case "number":
-                    switch (format.value) {
-                        case ".99":
-                            formatReturn.formatted = Number(data) ? data.toFixed(2) : data;
-                            break;
-                        case "n":
-                            formatReturn.formatted = Number(data) ? data : 0;
-                            break;
-                    }
-                    break;
-                case "date":
-                    formatReturn.formatted = moment(data).format("MM/DD/YYYY");
-                    break;
-                case "text":
-                    var tarray = format.value.split("{val}");
-                    if (tarray.length === 0) {
-                        formatReturn.formatted = tarray[0];
-                    }
-                    else {
-                        var tbuilder = "";
-                        for (var i = 0; i < tarray.length - 1; i++) {
-                            tbuilder += tarray[i] + data;
-                        }
-                        tbuilder += tarray[tarray.length - 1];
-                        formatReturn.formatted = tbuilder;
-                    }
-                    break;
-                default:
-                    console.log("applyFormat received an undefined format.type");
-            }
-        }
-        formatReturn.classes = formatReturn.classes ? " class=\"" + formatReturn.classes.slice(0, -1) + "\"" : "";
-        return formatReturn;
-    }
-    exports_2("applyFormat", applyFormat);
-    return {
-        setters: [],
-        execute: function () {
-        }
-    };
-});
-System.register(["column", "format"], function (exports_3, context_3) {
-    "use strict";
-    var __moduleName = context_3 && context_3.id;
     var column_1, format_1, Report;
     return {
         setters: [
@@ -331,32 +208,28 @@ System.register(["column", "format"], function (exports_3, context_3) {
                     return formatsonly ? formats : formatdiv;
                 };
                 Report.prototype.ColEditForm = function (posindex) {
-                    if (!$.isNumeric(posindex)) {
-                        return;
-                    }
-                    var position = Number(posindex);
                     var cols = this.ReportCols.filter(function (col) { return col.Position > -1; });
                     cols.sort(function (a, b) {
                         return a.Position - b.Position;
                     });
-                    var col = cols.filter(function (col) { return col.Position === position; });
-                    var prev_col = col[0].Position > 0 ? cols[col[0].Position - 1] : null;
-                    var next_col = col[0].Position < cols.length - 1 ? cols[col[0].Position + 1] : null;
+                    var col = cols.filter(function (col) { return col.Position === posindex; });
+                    var prev_col = column_1.Col[0].Position > 0 ? cols[col[0].Position - 1] : null;
+                    var next_col = column_1.Col[0].Position < cols.length - 1 ? cols[col[0].Position + 1] : null;
                     var form = "\n            <div class=\"columneditform btn-group dropright btn-group-sm pl-2\">\n                <a class=\"btn excludecheckbox\" section=\"" + "Exclude" + "\" colposition=\"" + col[0].Position + "\" colindex=\"" + col[0].Index + "\"\n                 href=\"#\"><i class=\"fa fa-check-square-o\"></a></i>\n                <a class=\"btn dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\"><i class=\"fa fa-gear\"></i></a>\n                <ul class=\"dropdown-menu\" colposition=\"" + col[0].Position + "\" colindex=\"" + col[0].Index + "\">";
                     for (var _i = 0, _a = ["Header"]; _i < _a.length; _i++) {
                         var section = _a[_i];
                         form += "<div class=\"p-0 m-0 text-center\">";
-                        form += col[0].Position > 0 && !col[0].Group.show && (prev_col && !prev_col.Group.show) ?
+                        form += column_1.Col[0].Position > 0 && !col[0].Group.show && (prev_col && !prev_col.Group.show) ?
                             "<i class=\"moveleft clickable fa fa-arrow-left\"></i>" : "<i class=\"moveleft gray fa fa-arrow-left\"></i>";
-                        form += col[0].Group.show ? " grouped " : " move ";
-                        form += col[0].Position < cols.length - 1 && !col[0].Group.show && (next_col && !next_col.Group.show) ?
+                        form += column_1.Col[0].Group.show ? " grouped " : " move ";
+                        form += column_1.Col[0].Position < cols.length - 1 && !col[0].Group.show && (next_col && !next_col.Group.show) ?
                             "<i class=\"moveright clickable fa fa-arrow-right\"></i></div>" :
                             "<i class=\"moveright gray fa fa-arrow-right\"></i></div>";
                         form += "<li class=\"p-2\">" + section + ":<input class=\"rg-watch\" type=\"text\" section=\"" + section + "\"\n                     value=\"" + col[0][section] + "\"></li>";
                     }
                     for (var _b = 0, _c = ["Detail", "Group", "SubTotal", "FinalTotal"]; _b < _c.length; _b++) {
                         var section = _c[_b];
-                        var colinfo = col[0][section];
+                        var colinfo = column_1.Col[0][section];
                         var checked = colinfo.show ? " checked=checked" : "";
                         form += "<li class=\"px-2\">" + section + ":<div class=\"form-check form-check-inline\">\n                    <input class=\"form-check-input rg-watch ml-2\" section=\"" + section + "\" type=\"checkbox\" " + checked + "}\">\n                    <a href=\"#\" class=\"addformatlink font-weight-light font-italic small ml-2\" section=\"" + section + "\">add format</a></li>";
                         form += this.ColEditFormats(col[0].Index, section);
@@ -542,7 +415,7 @@ System.register(["column", "format"], function (exports_3, context_3) {
                 };
                 return Report;
             }());
-            exports_3("default", Report);
+            exports_1("default", Report);
         }
     };
 });
