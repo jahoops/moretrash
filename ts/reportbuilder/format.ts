@@ -74,4 +74,15 @@ export function applyFormat(formats: string[], data ? : any): IFormatReturn {
     formatReturn.classes = formatReturn.classes ? " class=\"" + formatReturn.classes.slice(0, -1) + "\"" : "";
     return formatReturn;
 }
+/* Backgrounds */
+const backgrounds:string[] = ["bg-navy","bg-blue","bg-aqua","bg-teal","bg-olive","bg-green"
+,"bg-lime","bg-yellow","bg-orange","bg-red","bg-fuchsia","bg-purple","bg-maroon","bg-white"
+,"bg-gray","bg-silver","bg-black"]
+/* Colors */
+const textcolors:string[] = ["navy","blue","aqua","teal","olive","green","lime","yellow","orange","red"
+,"fuchsia","purple","maroon","white","silver","gray","black"];
+const textalign:string[] = ["text-left","text-center","text-right"];
 
+<p class="text-lowercase">Lowercased text.</p>
+<p class="text-uppercase">Uppercased text.</p>
+<p class="text-capitalize">CapiTaliZed text.</p>
