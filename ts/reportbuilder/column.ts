@@ -1,6 +1,8 @@
+import {IFormat} from "./format";
+
 export class ColumnInfo {
     show: boolean;
-    formats: string[] = [];
+    formats: IFormat[] = [];
 }
 enum Sort {
     none,

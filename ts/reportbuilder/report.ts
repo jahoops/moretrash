@@ -1,5 +1,5 @@
 import {Col, ColumnInfo} from "./column";
-import {IFormat, IFormatReturn, applyFormat} from "./format";
+import {IFormatReturn, ApplyFormat, FormatSelectForm} from "./format";
 
 class Report {
     ReportID: number;
@@ -47,12 +47,12 @@ class Report {
                 };
                 const newCol:Col = new Col(c);
                 if (ci.IsNumber) {
-                    newCol.Detail.formats.push("align right");
-                    newCol.SubTotal.formats.push("align right");
-                    newCol.FinalTotal.formats.push("align right");
-                    newCol.Detail.formats.push("number");
-                    newCol.SubTotal.formats.push("number");
-                    newCol.FinalTotal.formats.push("number");
+                    newCol.Detail.formats.push({type:"class",value:"text-right"});
+                    newCol.SubTotal.formats.push({type:"class",value:"text-right"});
+                    newCol.FinalTotal.formats.push({type:"class",value:"text-right"});
+                    newCol.Detail.formats.push({type:"number",value:"number"});
+                    newCol.SubTotal.formats.push({type:"number",value:"number"});
+                    newCol.FinalTotal.formats.push({type:"number",value:"number"});
                 }
                 this.ReportCols.push(newCol);
             }
@@ -148,7 +148,7 @@ class Report {
                         let grouprow:string = `<tr>`;
                         for (let g:number=0; g<cols.length; g++) {
                             const group_c : Col = cols[g];
-                            let format: IFormatReturn = applyFormat(c.Group.formats);
+                            let format: IFormatReturn = ApplyFormat(c.Group.formats);
                             grouprow += thisCol === group_c.Index ? `<td${format.classes}>${thisVal}</td>` : `<td></td>`;
                         }
                         grouprow += `</tr>`;
@@ -162,7 +162,7 @@ class Report {
                 }
                 // keep building detailrow
                 if (c.Detail.show) {
-                    let format: IFormatReturn = applyFormat(c.Detail.formats, r[c.Index]);
+                    let format: IFormatReturn = ApplyFormat(c.Detail.formats, r[c.Index]);
                     detailrow += `<td${format.classes}>${format.formatted}</td>`;
                 } else {
                     detailrow += `<td></td>`;
@@ -188,6 +188,22 @@ class Report {
         reRender==="body" ? $(el).html(tbody) : $(el).append(thead + tbody);
 
     }
+    ExportData():object {
+        //this exports the data that is showing in the table, without grouping/subtotals/etc...
+        let returnobject:any[][]= [];
+        for (let r:number=0; r<this.ReportRows.length; r++) {
+            returnobject[r]=[];
+            let i = 0;
+            for (let c:number=0; c<this.ReportCols.length; c++) {
+                if(this.ReportCols[c].Position>-1){
+                    returnobject[r][i]=this.ReportRows[r][c];
+                    i++;
+                }
+
+            }
+        }
+        return returnobject;
+    }
     ColEditFormats(colindex:number, section:string, formatsonly?:boolean):string {
         const colinfo:ColumnInfo = this.ReportCols[colindex][section];
         let formatdiv:string = ``;
@@ -195,7 +211,7 @@ class Report {
         formatdiv += `<div class="formatsdiv d-flex flex-wrap m-0" colindex="${colindex}" section="${section}" >`;
         if(colinfo.formats && colinfo.formats.length>0) {
             for (let j:number=0; j<colinfo.formats.length; j++) {
-                formats += `<div class="border rounded font-weight-light font-italic small m-1 px-1 bg-creps">${colinfo.formats[j]}
+                formats += `<div class="border rounded font-weight-light font-italic small m-1 px-1 bg-creps">${colinfo.formats[j].value}
                  <i class="removeformat fa fa-remove ml-1 clickable" style="height: 4px" formatindex="${j}"></i></div>`;
             }
             formatdiv += formats;
@@ -243,32 +259,16 @@ class Report {
 
         return form;
     }
-    FormatSelectForm():string {
-        let form:string = `
-            <div id="formatSelectForm" class="position-absolute bg-info border rounded border--dark" style="display:none; z-index:1001;">
-                <div class="d-flex flex-column m-0">
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1
-                     bg-light clickable">align right</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">hilite</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">number</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1
-                     bg-light clickable">two decimal</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">date</div>
-                    <div class="addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable">text</div>
-                </div>
-            </div>`;
-        return form;
-    }
-    private SetGroupColumns():void {
-        const groups:Col[] = this.ReportCols.filter(col => { return col.Group.show && col.Position>-1; });
-        groups.sort(function(a:Col,b:Col):number {
-            return a.Position - b.Position;
-        });
-        for(let i:number=0;i<groups.length;i++) {
-            this.MoveToPosition(groups[i].Position, i);
-        }
-        this.SortAll();
-    }
+    // private SetGroupColumns():void {
+    //     const groups:Col[] = this.ReportCols.filter(col => { return col.Group.show && col.Position>-1; });
+    //     groups.sort(function(a:Col,b:Col):number {
+    //         return a.Position - b.Position;
+    //     });
+    //     for(let i:number=0;i<groups.length;i++) {
+    //         this.MoveToPosition(groups[i].Position, i);
+    //     }
+    //     this.SortAll();
+    // }
     private SwitchPosition(fromposition:number,toposition:number):void {
         if(fromposition===toposition) { return; }
         const from:Col[] = this.ReportCols.filter(col => { return col.Position===fromposition; });
@@ -292,21 +292,24 @@ class Report {
             this.SwitchPosition(fromposition,toposition);
         }
     }
-    private SortAll():void {
-        const saveheaders:any = this.ReportRows.shift();
-        const cols:Col[] = this.ReportCols.filter(col => { return col.Position>-1; });
-        cols.sort(function(a:Col,b:Col):number {
-            return a.Position - b.Position;
-        });
-        for(let i:number=cols.length-1;i>-1;i--) {
-            let c: Col = cols[i];
-            if(c.Group.show && !c.Sort) {
-                c.Sort = 1;
-            }
-            if(c.Sort) { this.SortData(c.Sort,c); }
-         }
-        this.ReportRows.unshift(saveheaders);
+    FormatSelectForm() {
+        return FormatSelectForm();
     }
+    // private SortAll():void {
+    //     const saveheaders:any = this.ReportRows.shift();
+    //     const cols:Col[] = this.ReportCols.filter(col => { return col.Position>-1; });
+    //     cols.sort(function(a:Col,b:Col):number {
+    //         return a.Position - b.Position;
+    //     });
+    //     for(let i:number=cols.length-1;i>-1;i--) {
+    //         let c: Col = cols[i];
+    //         if(c.Group.show && !c.Sort) {
+    //             c.Sort = 1;
+    //         }
+    //         if(c.Sort) { this.SortData(c.Sort,c); }
+    //      }
+    //     this.ReportRows.unshift(saveheaders);
+    // }
     SortData(direction:any,col:Col):any {
         function asc(a:any, b:any):number {
             let colA:any = a[col.Index];
@@ -345,12 +348,12 @@ class Report {
             IsRowTotalColumn: true
         };
         const newCol:Col = new Col(c);
-        newCol.Detail.formats.push("align right");
-        newCol.SubTotal.formats.push("align right");
-        newCol.FinalTotal.formats.push("align right");
-        newCol.Detail.formats.push("number");
-        newCol.SubTotal.formats.push("number");
-        newCol.FinalTotal.formats.push("number");
+        newCol.Detail.formats.push({type:"class",value:"text-right"});
+        newCol.SubTotal.formats.push({type:"class",value:"text-right"});
+        newCol.FinalTotal.formats.push({type:"class",value:"text-right"});
+        newCol.Detail.formats.push({type:"number",value:"number"});
+        newCol.SubTotal.formats.push({type:"number",value:"number"});
+        newCol.FinalTotal.formats.push({type:"number",value:"number"});
         this.ReportCols.push(newCol);
         this.ReportRows[0].push("Total");
         for (let r:number = 1; r<this.ReportRows.length; r++) {
@@ -382,11 +385,11 @@ class Report {
             if (c.Position<0) { continue; }
             let subformat: IFormatReturn;
             if (c.SubTotal.show) {
-                subformat = applyFormat(c.SubTotal.formats, subtotals[subtot]);
+                subformat = ApplyFormat(c.SubTotal.formats, subtotals[subtot]);
                 subtotals[subtot] = 0;
                 subtot++;
             } else {
-                subformat = applyFormat(c.SubTotal.formats, "");
+                subformat = ApplyFormat(c.SubTotal.formats, "");
             }
             subtotalrow += c.SubTotal.show ? `<td${subformat.classes}>${subformat.formatted}</td>` : `<td></td>`;
         }
@@ -401,10 +404,10 @@ class Report {
             const c: Col = ReportCols[i];
             if (c.Position<0) { continue; }
             if (c.FinalTotal.show) {
-                finalformat = applyFormat(c.FinalTotal.formats, finalTotals[fintot]);
+                finalformat = ApplyFormat(c.FinalTotal.formats, finalTotals[fintot]);
                 fintot++;
             } else {
-                finalformat = applyFormat(c.FinalTotal.formats, "");
+                finalformat = ApplyFormat(c.FinalTotal.formats, "");
             }
             finaltotalrow += c.FinalTotal.show ? `<td${finalformat.classes}>${finalformat.formatted}</td>` : `<td></td>`;
         }

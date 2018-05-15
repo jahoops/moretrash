@@ -1,6 +1,111 @@
-System.register("column", [], function (exports_1, context_1) {
+System.register("format", [], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
+    function ApplyFormat(formats, data) {
+        var formatReturn = {
+            classes: "",
+            formatted: data
+        };
+        for (var _i = 0, formats_1 = formats; _i < formats_1.length; _i++) {
+            var format = formats_1[_i];
+            switch (format.type) {
+                case "class":
+                    formatReturn.classes += format.type === "class" ? format.value + " " : "";
+                    break;
+                case "number":
+                    switch (format.value) {
+                        case ".99":
+                            formatReturn.formatted = Number(data) ? data.toFixed(2) : data;
+                            break;
+                        case "n":
+                            formatReturn.formatted = Number(data) ? data : 0;
+                            break;
+                    }
+                    break;
+                case "date":
+                    formatReturn.formatted = moment(data).format(format.value);
+                    break;
+                case "addtext":
+                    var tarray = format.value.split("{val}");
+                    if (tarray.length === 0) {
+                        formatReturn.formatted = tarray[0];
+                    }
+                    else {
+                        var tbuilder = "";
+                        for (var i = 0; i < tarray.length - 1; i++) {
+                            tbuilder += tarray[i] + data;
+                        }
+                        tbuilder += tarray[tarray.length - 1];
+                        formatReturn.formatted = tbuilder;
+                    }
+                    break;
+                default:
+                    console.log("applyFormat received an undefined format.type");
+            }
+        }
+        formatReturn.classes = formatReturn.classes ? " class=\"" + formatReturn.classes.slice(0, -1) + "\"" : "";
+        return formatReturn;
+    }
+    exports_1("ApplyFormat", ApplyFormat);
+    function FormatSelectForm() {
+        var backgroundcolor = ["bg-hilite", "bg-navy", "bg-blue", "bg-aqua", "bg-teal", "bg-olive", "bg-green",
+            "bg-lime", "bg-yellow", "bg-orange", "bg-red", "bg-fuchsia", "bg-purple", "bg-maroon", "bg-white",
+            "bg-gray", "bg-silver", "bg-black"];
+        var backgroundcolors = "";
+        for (var i = 0; i < backgroundcolor.length; i++) {
+            var f = backgroundcolor[i];
+            backgroundcolors += "<li class=\"dropdown-item " + f + "\"><a class=\"addformatitem\" href=\"#\" cformat=\"" + f + "\">" + f + "</a></li>";
+        }
+        var textcolor = ["navy", "blue", "aqua", "teal", "olive", "green", "lime", "yellow", "orange", "red",
+            "fuchsia", "purple", "maroon", "white", "silver", "gray", "black"];
+        var textcolors = "";
+        for (var i = 0; i < textcolor.length; i++) {
+            var f = textcolor[i];
+            textcolors += "<li class=\"dropdown-item " + f + "\"><a class=\"addformatitem\" href=\"#\" cformat=\"" + f + "\">" + f + "</a></li>";
+        }
+        var textalign = ["text-left", "text-center", "text-right"];
+        var textaligns = "";
+        for (var i = 0; i < textalign.length; i++) {
+            var f = textalign[i];
+            textaligns += "<li class=\"dropdown-item " + f + "\"><a class=\"addformatitem\" href=\"#\" cformat=\"" + f + "\">" + f + "</a></li>";
+        }
+        var texttransform = ["text-lowercase", "text-uppercase", "text-capitalize"];
+        var texttransforms = "";
+        for (var i = 0; i < texttransform.length; i++) {
+            var f = texttransform[i];
+            texttransforms += "<li class=\"dropdown-item " + f + "\"><a class=\"addformatitem\" href=\"#\" cformat=\"" + f + "\">" + f + "</a></li>";
+        }
+        var textfont = ["font-weight-bold", "font-weight-normal", "font-weight-light", "font-italic"];
+        var textfonts = "";
+        for (var i = 0; i < textfont.length; i++) {
+            var f = textfont[i];
+            textfonts += "<li class=\"dropdown-item " + f + "\"><a class=\"addformatitem\" href=\"#\" cformat=\"" + f + "\">" + f + "</a></li>";
+        }
+        var numberformat = ["number", "two decimal"];
+        var numberformats = "";
+        for (var i = 0; i < numberformat.length; i++) {
+            var f = numberformat[i];
+            numberformats += "<li class=\"dropdown-item\"><a class=\"addformatitem\" href=\"#\" nformat=\"" + f + "\">" + f + "</a></li>";
+        }
+        var dateformat = ["MM-DD-YYYY", "MM-YYYY"];
+        var dateformats = "";
+        for (var i = 0; i < dateformat.length; i++) {
+            var f = dateformat[i];
+            dateformats += "<li class=\"dropdown-item\"><a class=\"addformatitem\" href=\"#\" dformat=\"" + f + "\">" + f + "</a></li>";
+        }
+        var form = "\n        <div id=\"formatSelectForm\" class=\"position-absolute bg-info border rounded border--dark\" style=\"z-index:1002;\">\n            <div class=\"dropdown\">\n                <ul class=\"dropdown-menu multi-level\" role=\"menu\" aria-labelledby=\"dropdownMenu\">\n                    <li class=\"dropdown-item\"><a class=\"addformatitem\" href=\"#\" tformat=\"addtext\">Add Text</a></li>\n                    <li class=\"dropdown-submenu\"><a class=\"dropdown-item\" tabindex=\"-1\" href=\"#\">Number Formats</a>\n                        <ul class=\"dropdown-menu\">\n                        " + numberformats + "\n                        </ul>\n                    </li>\n                    <li class=\"dropdown-submenu\"><a class=\"dropdown-item\" tabindex=\"-1\" href=\"#\">Date Formats</a>\n                        <ul class=\"dropdown-menu\">\n                        " + dateformats + "\n                        </ul>\n                    </li>\n                    <li class=\"dropdown-submenu\"><a class=\"dropdown-item\" tabindex=\"-1\" href=\"#\">Text Alignment</a>\n                        <ul class=\"dropdown-menu\">\n                        " + textaligns + "\n                        </ul>\n                    </li>\n                    <li class=\"dropdown-submenu\"><a class=\"dropdown-item\" tabindex=\"-1\" href=\"#\">Text Transform</a>\n                        <ul class=\"dropdown-menu\">\n                        " + texttransforms + "\n                        </ul>\n                    </li>\n                    <li class=\"dropdown-submenu\"><a class=\"dropdown-item\" tabindex=\"-1\" href=\"#\">Text Bold/Italic</a>\n                        <ul class=\"dropdown-menu\">\n                        " + textfonts + "\n                        </ul>\n                    </li>\n                    <li class=\"dropdown-submenu\"><a class=\"dropdown-item\" tabindex=\"-1\" href=\"#\">Text Color</a>\n                        <ul class=\"dropdown-menu\">\n                        " + textcolors + "\n                        </ul>\n                    </li>\n                    <li class=\"dropdown-submenu\"><a class=\"dropdown-item\" tabindex=\"-1\" href=\"#\">Background Color</a>\n                        <ul class=\"dropdown-menu\">\n                        " + backgroundcolors + "\n                        </ul>\n                    </li>\n                </ul>\n            </div>\n        </div>";
+        return form;
+    }
+    exports_1("FormatSelectForm", FormatSelectForm);
+    return {
+        setters: [],
+        execute: function () {
+        }
+    };
+});
+System.register("column", [], function (exports_2, context_2) {
+    "use strict";
+    var __moduleName = context_2 && context_2.id;
     var ColumnInfo, Sort, Col;
     return {
         setters: [],
@@ -11,7 +116,7 @@ System.register("column", [], function (exports_1, context_1) {
                 }
                 return ColumnInfo;
             }());
-            exports_1("ColumnInfo", ColumnInfo);
+            exports_2("ColumnInfo", ColumnInfo);
             (function (Sort) {
                 Sort[Sort["none"] = 0] = "none";
                 Sort[Sort["asc"] = 1] = "asc";
@@ -42,86 +147,7 @@ System.register("column", [], function (exports_1, context_1) {
                 }
                 return Col;
             }());
-            exports_1("Col", Col);
-        }
-    };
-});
-System.register("format", [], function (exports_2, context_2) {
-    "use strict";
-    var __moduleName = context_2 && context_2.id;
-    function getFormat(formatname) {
-        switch (formatname) {
-            case "align right":
-                return { type: "class", value: "text-right" };
-            case "hilite":
-                return { type: "class", value: "hilite" };
-            case "background red":
-                return { type: "class", value: "bg-red" };
-            case "number":
-                return { type: "number", value: "n" };
-            case "two decimal":
-                return { type: "number", value: ".99" };
-            case "date MM/DD/YYYY":
-                return { type: "date", value: "MM/DD/YYYY" };
-            case "date MM/YYYY":
-                return { type: "date", value: "MM/YYYY" };
-            default:
-                if (formatname.slice(0, 5) === "text=") {
-                    return { type: "text", value: formatname.slice(5) };
-                }
-                return null;
-        }
-    }
-    function applyFormat(formats, data) {
-        var formatReturn = {
-            classes: "",
-            formatted: data
-        };
-        for (var _i = 0, formats_1 = formats; _i < formats_1.length; _i++) {
-            var f = formats_1[_i];
-            var format = getFormat(f);
-            switch (format.type) {
-                case "class":
-                    formatReturn.classes += format.type === "class" ? format.value + " " : "";
-                    break;
-                case "number":
-                    switch (format.value) {
-                        case ".99":
-                            formatReturn.formatted = Number(data) ? data.toFixed(2) : data;
-                            break;
-                        case "n":
-                            formatReturn.formatted = Number(data) ? data : 0;
-                            break;
-                    }
-                    break;
-                case "date":
-                    formatReturn.formatted = moment(data).format(format.value);
-                    break;
-                case "text":
-                    var tarray = format.value.split("{val}");
-                    if (tarray.length === 0) {
-                        formatReturn.formatted = tarray[0];
-                    }
-                    else {
-                        var tbuilder = "";
-                        for (var i = 0; i < tarray.length - 1; i++) {
-                            tbuilder += tarray[i] + data;
-                        }
-                        tbuilder += tarray[tarray.length - 1];
-                        formatReturn.formatted = tbuilder;
-                    }
-                    break;
-                default:
-                    console.log("applyFormat received an undefined format.type");
-            }
-        }
-        formatReturn.classes = formatReturn.classes ? " class=\"" + formatReturn.classes.slice(0, -1) + "\"" : "";
-        return formatReturn;
-    }
-    exports_2("applyFormat", applyFormat);
-    return {
-        setters: [],
-        execute: function () {
+            exports_2("Col", Col);
         }
     };
 });
@@ -185,12 +211,12 @@ System.register(["column", "format"], function (exports_3, context_3) {
                             };
                             var newCol = new column_1.Col(c);
                             if (ci.IsNumber) {
-                                newCol.Detail.formats.push("align right");
-                                newCol.SubTotal.formats.push("align right");
-                                newCol.FinalTotal.formats.push("align right");
-                                newCol.Detail.formats.push("number");
-                                newCol.SubTotal.formats.push("number");
-                                newCol.FinalTotal.formats.push("number");
+                                newCol.Detail.formats.push({ type: "class", value: "text-right" });
+                                newCol.SubTotal.formats.push({ type: "class", value: "text-right" });
+                                newCol.FinalTotal.formats.push({ type: "class", value: "text-right" });
+                                newCol.Detail.formats.push({ type: "number", value: "number" });
+                                newCol.SubTotal.formats.push({ type: "number", value: "number" });
+                                newCol.FinalTotal.formats.push({ type: "number", value: "number" });
                             }
                             this.ReportCols.push(newCol);
                         }
@@ -284,7 +310,7 @@ System.register(["column", "format"], function (exports_3, context_3) {
                                     var grouprow = "<tr>";
                                     for (var g = 0; g < cols.length; g++) {
                                         var group_c = cols[g];
-                                        var format = format_1.applyFormat(c.Group.formats);
+                                        var format = format_1.ApplyFormat(c.Group.formats);
                                         grouprow += thisCol === group_c.Index ? "<td" + format.classes + ">" + thisVal + "</td>" : "<td></td>";
                                     }
                                     grouprow += "</tr>";
@@ -298,7 +324,7 @@ System.register(["column", "format"], function (exports_3, context_3) {
                             }
                             // keep building detailrow
                             if (c.Detail.show) {
-                                var format = format_1.applyFormat(c.Detail.formats, r[c.Index]);
+                                var format = format_1.ApplyFormat(c.Detail.formats, r[c.Index]);
                                 detailrow += "<td" + format.classes + ">" + format.formatted + "</td>";
                             }
                             else {
@@ -320,6 +346,21 @@ System.register(["column", "format"], function (exports_3, context_3) {
                     tbody += reRender === "body" ? "" : "</tbody>";
                     reRender === "body" ? $(el).html(tbody) : $(el).append(thead + tbody);
                 };
+                Report.prototype.ExportData = function () {
+                    //this exports the data that is showing in the table, without grouping/subtotals/etc...
+                    var returnobject = [];
+                    for (var r = 0; r < this.ReportRows.length; r++) {
+                        returnobject[r] = [];
+                        var i = 0;
+                        for (var c = 0; c < this.ReportCols.length; c++) {
+                            if (this.ReportCols[c].Position > -1) {
+                                returnobject[r][i] = this.ReportRows[r][c];
+                                i++;
+                            }
+                        }
+                    }
+                    return returnobject;
+                };
                 Report.prototype.ColEditFormats = function (colindex, section, formatsonly) {
                     var colinfo = this.ReportCols[colindex][section];
                     var formatdiv = "";
@@ -327,7 +368,7 @@ System.register(["column", "format"], function (exports_3, context_3) {
                     formatdiv += "<div class=\"formatsdiv d-flex flex-wrap m-0\" colindex=\"" + colindex + "\" section=\"" + section + "\" >";
                     if (colinfo.formats && colinfo.formats.length > 0) {
                         for (var j = 0; j < colinfo.formats.length; j++) {
-                            formats += "<div class=\"border rounded font-weight-light font-italic small m-1 px-1 bg-creps\">" + colinfo.formats[j] + "\n                 <i class=\"removeformat fa fa-remove ml-1 clickable\" style=\"height: 4px\" formatindex=\"" + j + "\"></i></div>";
+                            formats += "<div class=\"border rounded font-weight-light font-italic small m-1 px-1 bg-creps\">" + colinfo.formats[j].value + "\n                 <i class=\"removeformat fa fa-remove ml-1 clickable\" style=\"height: 4px\" formatindex=\"" + j + "\"></i></div>";
                         }
                         formatdiv += formats;
                     }
@@ -368,20 +409,16 @@ System.register(["column", "format"], function (exports_3, context_3) {
                     form += "</ul>\n            </div>";
                     return form;
                 };
-                Report.prototype.FormatSelectForm = function () {
-                    var form = "\n            <div id=\"formatSelectForm\" class=\"position-absolute bg-info border rounded border--dark\" style=\"display:none; z-index:1001;\">\n                <div class=\"d-flex flex-column m-0\">\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1\n                     bg-light clickable\">align right</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">hilite</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">number</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1\n                     bg-light clickable\">two decimal</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">date</div>\n                    <div class=\"addformatitem border rounded font-weight-light font-italic small m-1 px-1 bg-light clickable\">text</div>\n                </div>\n            </div>";
-                    return form;
-                };
-                Report.prototype.SetGroupColumns = function () {
-                    var groups = this.ReportCols.filter(function (col) { return col.Group.show && col.Position > -1; });
-                    groups.sort(function (a, b) {
-                        return a.Position - b.Position;
-                    });
-                    for (var i = 0; i < groups.length; i++) {
-                        this.MoveToPosition(groups[i].Position, i);
-                    }
-                    this.SortAll();
-                };
+                // private SetGroupColumns():void {
+                //     const groups:Col[] = this.ReportCols.filter(col => { return col.Group.show && col.Position>-1; });
+                //     groups.sort(function(a:Col,b:Col):number {
+                //         return a.Position - b.Position;
+                //     });
+                //     for(let i:number=0;i<groups.length;i++) {
+                //         this.MoveToPosition(groups[i].Position, i);
+                //     }
+                //     this.SortAll();
+                // }
                 Report.prototype.SwitchPosition = function (fromposition, toposition) {
                     if (fromposition === toposition) {
                         return;
@@ -409,23 +446,24 @@ System.register(["column", "format"], function (exports_3, context_3) {
                         this.SwitchPosition(fromposition, toposition);
                     }
                 };
-                Report.prototype.SortAll = function () {
-                    var saveheaders = this.ReportRows.shift();
-                    var cols = this.ReportCols.filter(function (col) { return col.Position > -1; });
-                    cols.sort(function (a, b) {
-                        return a.Position - b.Position;
-                    });
-                    for (var i = cols.length - 1; i > -1; i--) {
-                        var c = cols[i];
-                        if (c.Group.show && !c.Sort) {
-                            c.Sort = 1;
-                        }
-                        if (c.Sort) {
-                            this.SortData(c.Sort, c);
-                        }
-                    }
-                    this.ReportRows.unshift(saveheaders);
+                Report.prototype.FormatSelectForm = function () {
+                    return format_1.FormatSelectForm();
                 };
+                // private SortAll():void {
+                //     const saveheaders:any = this.ReportRows.shift();
+                //     const cols:Col[] = this.ReportCols.filter(col => { return col.Position>-1; });
+                //     cols.sort(function(a:Col,b:Col):number {
+                //         return a.Position - b.Position;
+                //     });
+                //     for(let i:number=cols.length-1;i>-1;i--) {
+                //         let c: Col = cols[i];
+                //         if(c.Group.show && !c.Sort) {
+                //             c.Sort = 1;
+                //         }
+                //         if(c.Sort) { this.SortData(c.Sort,c); }
+                //      }
+                //     this.ReportRows.unshift(saveheaders);
+                // }
                 Report.prototype.SortData = function (direction, col) {
                     function asc(a, b) {
                         var colA = a[col.Index];
@@ -466,12 +504,12 @@ System.register(["column", "format"], function (exports_3, context_3) {
                         IsRowTotalColumn: true
                     };
                     var newCol = new column_1.Col(c);
-                    newCol.Detail.formats.push("align right");
-                    newCol.SubTotal.formats.push("align right");
-                    newCol.FinalTotal.formats.push("align right");
-                    newCol.Detail.formats.push("number");
-                    newCol.SubTotal.formats.push("number");
-                    newCol.FinalTotal.formats.push("number");
+                    newCol.Detail.formats.push({ type: "class", value: "text-right" });
+                    newCol.SubTotal.formats.push({ type: "class", value: "text-right" });
+                    newCol.FinalTotal.formats.push({ type: "class", value: "text-right" });
+                    newCol.Detail.formats.push({ type: "number", value: "number" });
+                    newCol.SubTotal.formats.push({ type: "number", value: "number" });
+                    newCol.FinalTotal.formats.push({ type: "number", value: "number" });
                     this.ReportCols.push(newCol);
                     this.ReportRows[0].push("Total");
                     for (var r = 1; r < this.ReportRows.length; r++) {
@@ -511,12 +549,12 @@ System.register(["column", "format"], function (exports_3, context_3) {
                         }
                         var subformat = void 0;
                         if (c.SubTotal.show) {
-                            subformat = format_1.applyFormat(c.SubTotal.formats, subtotals[subtot]);
+                            subformat = format_1.ApplyFormat(c.SubTotal.formats, subtotals[subtot]);
                             subtotals[subtot] = 0;
                             subtot++;
                         }
                         else {
-                            subformat = format_1.applyFormat(c.SubTotal.formats, "");
+                            subformat = format_1.ApplyFormat(c.SubTotal.formats, "");
                         }
                         subtotalrow += c.SubTotal.show ? "<td" + subformat.classes + ">" + subformat.formatted + "</td>" : "<td></td>";
                     }
@@ -533,11 +571,11 @@ System.register(["column", "format"], function (exports_3, context_3) {
                             continue;
                         }
                         if (c.FinalTotal.show) {
-                            finalformat = format_1.applyFormat(c.FinalTotal.formats, finalTotals[fintot]);
+                            finalformat = format_1.ApplyFormat(c.FinalTotal.formats, finalTotals[fintot]);
                             fintot++;
                         }
                         else {
-                            finalformat = format_1.applyFormat(c.FinalTotal.formats, "");
+                            finalformat = format_1.ApplyFormat(c.FinalTotal.formats, "");
                         }
                         finaltotalrow += c.FinalTotal.show ? "<td" + finalformat.classes + ">" + finalformat.formatted + "</td>" : "<td></td>";
                     }
