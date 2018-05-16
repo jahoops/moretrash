@@ -1,7 +1,7 @@
 SystemJS.config({
     meta: {
-        './reports/js/report.js': {
-            format: 'system'
+        "reports/js/report.js": {
+            format: "system"
         }
     }
 });
@@ -36,7 +36,7 @@ SystemJS.import("reports/js/report.js").then(function(rb){
             report = new rb.default(reportinfo.reportDataCall, jsonData, reportinfo.reportCols, reportinfo.reportID, reportinfo.reportName, "1.0");
             report.title = title;
             try {
-                pivotJSON = JSON.parse(reportinfo.reportPivot);
+                report.pivotJSON = JSON.parse(reportinfo.reportPivot);
             } catch (e){
             }   
             renderReport();
@@ -45,13 +45,13 @@ SystemJS.import("reports/js/report.js").then(function(rb){
         function renderReport(reRender) {
             $("#reportTable").empty();
             report.Render($("#reportTable"),reRender);
-            $('th.sorting').off('click').on('click', function(){
-                var colindex = $(this).attr('colindex');
-                direction = $(this).hasClass('ascending') ? 'ascending' : 'descending';
+            $("th.sorting").off("click").on("click", function(){
+                var colindex = $(this).attr("colindex");
+                direction = $(this).hasClass("ascending") ? "ascending" : "descending";
                 report.SortData(direction, report.ReportCols[colindex]);
                 renderReport();
             });
-            if($("#pivotjs").html()=="") renderPivot();
+            if(report.pivotJSON && $("#pivotjs").html()=="") renderPivot();
         }
 
         function renderPivot(){
@@ -70,38 +70,51 @@ SystemJS.import("reports/js/report.js").then(function(rb){
                     width:500
                 }
             };
-            $.extend(defaultJSON, pivotJSON);
+            $.extend(defaultJSON, report.pivotJSON);
             $("#pivotjs").pivotUI(report.ReportRows,defaultJSON,true);
-            $('.pvtAxisContainer, .pvtVals').hide();
+            $(".pvtAxisContainer, .pvtVals").hide();
         }
-        $('#printBtn').printPreview({
-            obj2print:'#printReportDiv'
+        $("#printBtn").printPreview({
+            obj2print:"#printReportDiv"
         });
     });
 }).catch(function(err){ console.error(err); });
 
-function dynamic_text() {
+function exportCSV() {
     var getdata = report.ExportData();
-    var results = Papa.unparse(getdata);
-    return results;
+    var csv = Papa.unparse(getdata);
+    download(new Blob([csv]), report.title + " - " + moment().format("MM/DD/YY").toString() + ".csv", "text/plain");
 }
-function download_file(name, contents, mime_type) {
-    debugger;
-    mime_type = mime_type || "text/plain";
-    var blob = new Blob([contents], {type: mime_type});
-    window.location.href = window.URL.createObjectURL(blob);
-    return;
-    var dlink = document.createElement('a');
-    dlink.download = report.title + ' - ' + moment().format('MM/DD/YY').toString() + '.csv';
-    dlink.href = window.URL.createObjectURL(blob);
-    dlink.onclick = function(e) {
-        var that = this;
-        setTimeout(function() {
-            window.URL.revokeObjectURL(that.href);
-        }, 1500);
-    };
-    dlink.click();
-    dlink.remove();
+
+$('.alert').alert();
+function alertThenFade(alertel, waitms){
+    $(alertel).show();
+    setTimeout(function(){
+        $(alertel).alert('close');
+    },waitms);
 }
-$('#copyBtn').on('click', function(){
-});
+function selectElementContents(el) {
+    var body = document.body, range, sel;
+    if (document.createRange && window.getSelection) {
+        range = document.createRange();
+        sel = window.getSelection();
+        sel.removeAllRanges();
+        try {
+            range.selectNodeContents(el);
+            sel.addRange(range);
+        } catch (e) {
+            range.selectNode(el);
+            sel.addRange(range);
+        }
+        document.execCommand("copy");
+        sel.removeAllRanges();
+        alertThenFade($('#copyalert'),2000);
+    } else if (body.createTextRange) {
+        range = body.createTextRange();
+        range.moveToElementText(el);
+        range.select();
+        range.execCommand("Copy");
+        sel.removeAllRanges();
+        alertThenFade($('#copyalert'),2000);
+    }
+}

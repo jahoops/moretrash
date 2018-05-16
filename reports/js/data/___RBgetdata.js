@@ -56,6 +56,7 @@ function RBsavereport(report, pivotJSON) {
     var reportCols = report.ReportCols;
     var reportInfo = {'reportName':reportName,'reportDataCall':reportDataCall, 'reportCols':reportCols,'reportPivot':pivotJSON};
     var found = -1;
+    var savestring;
     for(var i=0; i<reportlist.length; i++){
         if(reportlist[i].reportName==reportName){ found=i; break; }
     }
@@ -63,12 +64,12 @@ function RBsavereport(report, pivotJSON) {
         var rc = confirm(reportName + ' already exists.  Replace?');
         if(rc) {
             reportlist[found] = reportInfo;
-            var savestring = JSON.stringify(reportlist);
+            savestring = JSON.stringify(reportlist);
             localStorage.setItem('reportlist', savestring);
         }
     } else {
         reportlist.push(reportInfo);
-        var savestring = JSON.stringify(reportlist);
+        savestring = JSON.stringify(reportlist);
         localStorage.setItem('reportlist', savestring);
     }
 }

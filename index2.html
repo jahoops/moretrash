@@ -4,9 +4,9 @@
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fork-awesome/1.0.11/css/fork-awesome.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="reports/css/c3.css">
-    <link rel="stylesheet" type="text/css" href="reports/css/pivot.css">
-    <link rel="stylesheet" type="text/css" href="reports/css/___standard-report.css">
+    <link rel="stylesheet" type="text/css" href="css/c3.css">
+    <link rel="stylesheet" type="text/css" href="css/pivot.css">
+    <link rel="stylesheet" type="text/css" href="css/___standard-report.css">
     <style>
         body {font-family: Verdana;}
         .node {
@@ -21,19 +21,43 @@
     <title>Report</title>
 </head>
 <body>
-<div class="container-fluid" id="printReportDiv">
-<div id="reportBuilder" class="container-fluid pt-4" style="background-color:whitesmoke;">   
+<div id="reportBuilder" class="container-fluid pt-4" style="background-color:whitesmoke;">
+    <div class="row">
+        <form class="col needs-validation" onsubmit="saveReport()">
+            <div class="form-row p-2">
+                <div class="col text-right align-self-end">
+                    <label for="savedReportList">Saved Reports:</label>
+                </div>
+                <div class="col input-group">
+                    <select class="form-control" id="savedReportList" required>
+                    </select>
+                </div>
+                <div class="col text-right align-self-end">
+                    <label for="dataSource">Data Source:</label>
+                </div>
+                <div class="col input-group">
+                    <select class="form-control" id="dataSource" required>
+                    </select>
+                </div>
+                <div class="col text-right align-self-end">
+                    <label for="reportName">Report Name:</label>
+                </div>
+                <div class="col input-group">
+                    <input type="text" class="form-control" id="reportName" placeholder="~ Enter new report name ~" required>
+                </div>
+                <div class="col">
+                    <button id="saveReportButton" type="submit" class="btn btn-primary">Save Report</button>
+                </div>
+            </div>
+        </form>
+    </div>    
     <div class="row" style="min-height: 200px">
         <div class="col m-3">
-            <button id="printBtn" type="submit" class="m-1 btn btn-primary no-print">Print</button>
-            <button id="exportBtn" type="submit" class="m-1 btn btn-primary no-print" onclick="exportCSV();">Export</button>
-            <button id="copyBtn" type="submit" class="m-1 btn btn-primary no-print"
-                onclick="selectElementContents(document.getElementById('reportTable'));">Copy</button>
-            <span class="alert alert-success collapse" role="alert" id="copyalert">Table data copied to clipboard</span>
+            <a class="float-right" id="addrowtotal" href="#">add row total column</a>
             <table class="m-auto table table-striped table-bordered table-responsive" id="reportTable"></table>
         </div>
     </div>
-    <div class="row mb-5 no-print">
+    <div class="row mb-5">
         <div class="col m-3">
             <button id="refreshPivotChart" type="submit" class="m-1 float-right btn btn-danger collapse">Reset Chart</button>
             <button id="hidePivotEditor" type="submit" class="m-1 float-right btn btn-warning collapse">Hide Chart Editor</button>
@@ -42,12 +66,9 @@
         </div>
     </div>
 </div>
-</div>
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/url-search-params/0.10.0/url-search-params.js"></script>
-    <script src="reports/js/download.js"></script>
     <script src="reports/js/papaparse.js"></script>
     <script src="reports/js/printPreview.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="reports/js/pivot.js"></script>
     <script src="reports/js/plotly.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
@@ -56,13 +77,13 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
     <script src="reports/js/d3-3.5.6.min.js"></script>
     <script src="reports/js/c3.min.js"></script>
-    <script src="reports/js/data/___RVgetdata.js"></script>
+    <script src="reports/js/___RBgetdata.js"></script>
     <script src="reports/js/export_renderers.js"></script>
     <script src="reports/js/d3_renderers.js"></script>
     <script src="reports/js/c3_renderers.js"></script>
     <script src="reports/js/plotly_renderers.js"></script>
     <script src="reports/js/promise.js"></script>
     <script src="reports/js/system.js"></script>
-    <script src="reports/js/___ReportViewer.js"></script>
+    <script src="reports/js/___ReportBuilder.js"></script>
 </body>
 </html>

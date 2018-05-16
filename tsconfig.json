@@ -6,11 +6,11 @@
       "module":"system",
       "sourceMap": true,
       "target": "es5",
-      "outFile": "js/report.js"
+      "outFile": "reports/js/report.js"
     },
     "include": [
-      "ts/typelibs/*.ts",
-      "ts/reportbuilder/*.ts"
+      "reports/ts/typelibs/*.ts",
+      "reports/ts/reportbuilder/*.ts"
     ],
 
     "compileOnSave": true

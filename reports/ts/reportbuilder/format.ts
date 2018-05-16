@@ -53,47 +53,47 @@ export function ApplyFormat(formats: IFormat[], data ? : any): IFormatReturn {
 export function FormatSelectForm():string {
     const backgroundcolor:string[] = ["bg-hilite","bg-navy","bg-blue","bg-aqua","bg-teal","bg-olive","bg-green"
     ,"bg-lime","bg-yellow","bg-orange","bg-red","bg-fuchsia","bg-purple","bg-maroon","bg-white"
-    ,"bg-gray","bg-silver","bg-black"]
-    let backgroundcolors = "";
-        for(let i=0; i<backgroundcolor.length;i++){
-            let f = backgroundcolor[i];
+    ,"bg-gray","bg-silver","bg-black"];
+    let backgroundcolors:string = "";
+        for(let i:number=0; i<backgroundcolor.length;i++) {
+            let f:string = backgroundcolor[i];
             backgroundcolors += `<li class="dropdown-item ${f}"><a class="addformatitem" href="#" cformat="${f}">${f}</a></li>`;
         }
     const textcolor:string[] = ["navy","blue","aqua","teal","olive","green","lime","yellow","orange","red"
     ,"fuchsia","purple","maroon","white","silver","gray","black"];
-    let textcolors = "";
-        for(let i=0; i<textcolor.length;i++){
-            let f = textcolor[i];
+    let textcolors:string = "";
+        for(let i:number=0; i<textcolor.length;i++) {
+            let f:string = textcolor[i];
             textcolors += `<li class="dropdown-item ${f}"><a class="addformatitem" href="#" cformat="${f}">${f}</a></li>`;
         }
     const textalign:string[] = ["text-left","text-center","text-right"];
-    let textaligns = "";
-        for(let i=0; i<textalign.length;i++){
-            let f = textalign[i];
+    let textaligns:string = "";
+        for(let i:number=0; i<textalign.length;i++) {
+            let f:string = textalign[i];
             textaligns += `<li class="dropdown-item ${f}"><a class="addformatitem" href="#" cformat="${f}">${f}</a></li>`;
         }
     const texttransform:string[] = ["text-lowercase","text-uppercase","text-capitalize"];
-    let texttransforms = "";
-        for(let i=0; i<texttransform.length;i++){
-            let f = texttransform[i];
+    let texttransforms:string = "";
+        for(let i:number=0; i<texttransform.length;i++) {
+            let f:string = texttransform[i];
             texttransforms += `<li class="dropdown-item ${f}"><a class="addformatitem" href="#" cformat="${f}">${f}</a></li>`;
         }
     const textfont:string[] = ["font-weight-bold","font-weight-normal","font-weight-light","font-italic"];
-    let textfonts = "";
-        for(let i=0; i<textfont.length;i++){
-            let f = textfont[i];
+    let textfonts:string = "";
+        for(let i:number=0; i<textfont.length;i++) {
+            let f:string = textfont[i];
             textfonts += `<li class="dropdown-item ${f}"><a class="addformatitem" href="#" cformat="${f}">${f}</a></li>`;
         }
     const numberformat:string[] = ["number","two decimal"];
-    let numberformats = "";
-        for(let i=0; i<numberformat.length;i++){
-            let f = numberformat[i];
+    let numberformats:string = "";
+        for(let i:number=0; i<numberformat.length;i++) {
+            let f:string = numberformat[i];
             numberformats += `<li class="dropdown-item"><a class="addformatitem" href="#" nformat="${f}">${f}</a></li>`;
         }
     const dateformat:string[] = ["MM-DD-YYYY","MM-YYYY"];
-    let dateformats = "";
-        for(let i=0; i<dateformat.length;i++){
-            let f = dateformat[i];
+    let dateformats:string = "";
+        for(let i:number=0; i<dateformat.length;i++) {
+            let f:string = dateformat[i];
             dateformats += `<li class="dropdown-item"><a class="addformatitem" href="#" dformat="${f}">${f}</a></li>`;
         }
 
